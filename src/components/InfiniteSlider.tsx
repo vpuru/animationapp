@@ -22,21 +22,21 @@ export default function InfiniteSlider({ images, speed = 50 }: InfiniteSliderPro
   const duplicatedImages = [...images, ...images]
 
   return (
-    <div className="relative w-full overflow-hidden h-32">
+    <div className="relative w-full overflow-hidden h-48">
       <div 
         className="flex animate-slide"
         style={{
           animationDuration: `${speed}s`,
-          width: `${duplicatedImages.length * 128}px`
+          width: `${duplicatedImages.length * 96}px`
         }}
       >
         {duplicatedImages.map((image, index) => (
-          <div key={index} className="flex-shrink-0 w-32 h-32 mx-2">
+          <div key={index} className="flex-shrink-0 w-32 h-48 mx-2">
             <Image
               src={image}
               alt={`Headshot ${index + 1}`}
               width={128}
-              height={128}
+              height={192}
               className="w-full h-full object-cover rounded-lg"
             />
           </div>
