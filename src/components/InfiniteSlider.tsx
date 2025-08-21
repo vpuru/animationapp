@@ -50,8 +50,8 @@ export default function InfiniteSlider({ images, speed = 50, direction = 'left' 
         ))}
       </div>
       
-      <div className="absolute inset-y-0 left-0 w-16 pointer-events-none z-10" style={{background: 'linear-gradient(to right, #EEF0EB, transparent)'}} />
-      <div className="absolute inset-y-0 right-0 w-16 pointer-events-none z-10" style={{background: 'linear-gradient(to left, #EEF0EB, transparent)'}} />
+      <div className="absolute inset-y-0 left-0 w-24 pointer-events-none z-10" style={{background: 'linear-gradient(to right, #EEF0EB 0%, rgba(238, 240, 235, 0.8) 50%, transparent 100%)'}} />
+      <div className="absolute inset-y-0 right-0 w-24 pointer-events-none z-10" style={{background: 'linear-gradient(to left, #EEF0EB 0%, rgba(238, 240, 235, 0.8) 50%, transparent 100%)'}} />
       
       <style jsx>{`
         @keyframes slide-left {

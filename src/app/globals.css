@@ -81,8 +81,12 @@
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    @apply text-foreground;
+    background-color: #EEF0EB;
   }
 }
 

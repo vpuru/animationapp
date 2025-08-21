@@ -4,6 +4,8 @@ import EndorsementCard from "@/components/EndorsementCard";
 import UploadButton from "@/components/UploadButton";
 import AnimatedWaveText from "@/components/AnimatedWaveText";
 import MyPictures from "@/components/MyPictures";
+import TestimonialCard, { TestimonialCardProps } from "@/components/TestimonialCard";
+import testimonialsData from "@/data/testimonials.json";
 
 export default function Home() {
   const mockHeadshots = [
@@ -14,15 +16,12 @@ export default function Home() {
   ];
 
   return (
-    <div
-      className="min-h-screen text-gray-900 flex flex-col items-center justify-center"
-      style={{ backgroundColor: "#EEF0EB" }}
-    >
-      <div className="container mx-auto px-4 py-8 flex flex-col items-center">
-        <div className="mb-8">
+    <div className="text-gray-900 overflow-x-hidden">
+      <div className="container mx-auto px-4 pt-8 pb-8 flex flex-col items-center">
+        <div className="mb-4">
           <MyPictures />
         </div>
-        <div className="text-center mb-8">
+        <div className="text-center mb-8 mt-10">
           <h1 className="text-7xl md:text-5xl font-bold mb-2">
             Your World, <br />
             <AnimatedWaveText
@@ -34,13 +33,24 @@ export default function Home() {
           <p className="text-gray-600 text-lg mt-6 max-w-2xl mx-auto">
             Turn you and your friends into animated characters in seconds!
           </p>
-        </div>
-        <div className="mb-8">
-          <UploadButton />
+          <div className="mt-8">
+            <UploadButton />
+          </div>
         </div>
         <div className="space-y-4 md:space-y-8">
           <InfiniteSlider images={mockHeadshots} speed={30} direction="left" />
           <InfiniteSlider images={mockHeadshots} speed={30} direction="right" />
+        </div>
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          {testimonialsData.map((testimonial: TestimonialCardProps, index: number) => (
+            <TestimonialCard 
+              key={index}
+              testimonial={testimonial.testimonial}
+              userName={testimonial.userName}
+              userImage={testimonial.userImage}
+              rating={testimonial.rating}
+            />
+          ))}
         </div>
       </div>
     </div>
