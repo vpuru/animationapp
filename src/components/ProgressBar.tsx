@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import { useEffect, useState } from "react";
 
@@ -23,7 +23,7 @@ export default function ProgressBar() {
   }, [increment]);
 
   return (
-    <div className="w-full max-w-md mx-auto space-y-3">
+    <div className="w-full max-w-md mx-auto space-y-3 ">
       {/* Progress bar container */}
       <div className="relative w-full h-3 bg-gray-200 rounded-full overflow-hidden shadow-inner">
         {/* Progress fill */}
@@ -35,15 +35,10 @@ export default function ProgressBar() {
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shine" />
         </div>
       </div>
-      
+
       {/* Percentage text */}
       <div className="text-center">
-        <span className="text-lg font-semibold text-gray-700">
-          {Math.round(progress)}%
-        </span>
-        <p className="text-sm text-gray-500 mt-1">
-          Creating your perfect headshot...
-        </p>
+        <span className="text-lg font-semibold text-gray-700">{Math.round(progress)}%</span>
       </div>
     </div>
   );

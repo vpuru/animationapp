@@ -31,14 +31,14 @@ export default function FadingImages() {
   }, []);
 
   return (
-    <div className="relative w-64 h-64 md:w-80 md:h-80 rounded-2xl overflow-hidden shadow-2xl">
+    <div className="relative w-80 h-60 md:w-96 md:h-72 rounded-2xl overflow-hidden shadow-2xl">
       <Image
         src={images[currentImageIndex]}
         alt={`Headshot preview ${currentImageIndex + 1}`}
         fill
         className={`object-cover transition-opacity duration-500 ${fadeClass}`}
         priority
-        sizes="(max-width: 768px) 256px, 320px"
+        sizes="(max-width: 768px) 320px, 384px"
       />
       
       {/* Subtle gradient overlay for better visual appeal */}
