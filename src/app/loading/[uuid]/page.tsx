@@ -6,6 +6,7 @@ import FadingImages from "@/components/FadingImages";
 import ProgressBar from "@/components/ProgressBar";
 import CyclingText from "@/components/CyclingText";
 import StarRating from "@/components/StarRating";
+import { getPublicUrl } from "@/services/supabase";
 
 interface LoadingPageProps {
   params: Promise<{
@@ -16,24 +17,40 @@ interface LoadingPageProps {
 export default function LoadingPage({ params }: LoadingPageProps) {
   const [isProcessing, setIsProcessing] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [processingStage, setProcessingStage] = useState('Initializing...');
+  const [processingStage, setProcessingStage] = useState("Initializing...");
   const router = useRouter();
   const { uuid } = use(params);
 
   useEffect(() => {
     if (!uuid) {
-      setError('Invalid image ID');
+      setError("Invalid image ID");
       return;
     }
 
+    const checkImageExists = async () => {
+      // Try to get the processed image using expected output filename
+      const outputBucketId = `${uuid}_ghibli.png`; // or .jpg depending on your format
+      const imageUrl = getPublicUrl("output_images", outputBucketId);
+
+      // Test if image actually exists by trying to fetch it
+      const response = await fetch(imageUrl, { method: "HEAD" });
+
+      if (response.ok) {
+        router.push(`/paywall/${uuid}`);
+        return;
+      }
+    };
+
+    checkImageExists();
+
     const processImage = async () => {
       try {
-        setProcessingStage('Processing your image...');
-        
+        setProcessingStage("Processing your image...");
+
         const response = await fetch(`/api/process-image/${uuid}`, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         });
 
@@ -43,21 +60,15 @@ export default function LoadingPage({ params }: LoadingPageProps) {
         }
 
         const result = await response.json();
-        
-        if (result.success) {
-          setProcessingStage('Complete! Redirecting...');
-          
-          // Small delay to show completion message
-          setTimeout(() => {
-            router.push(`/paywall/${uuid}`);
-          }, 1000);
-        } else {
-          throw new Error(result.error || 'Processing failed');
-        }
 
+        if (result.success) {
+          router.push(`/paywall/${uuid}`);
+        } else {
+          throw new Error(result.error || "Processing failed");
+        }
       } catch (err) {
-        console.error('Processing error:', err);
-        setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+        console.error("Processing error:", err);
+        setError(err instanceof Error ? err.message : "An unexpected error occurred");
         setIsProcessing(false);
       }
     };
@@ -73,7 +84,7 @@ export default function LoadingPage({ params }: LoadingPageProps) {
             <h2 className="text-xl font-semibold mb-2">Processing Failed</h2>
             <p className="text-sm mb-4">{error}</p>
             <button
-              onClick={() => router.push('/')}
+              onClick={() => router.push("/")}
               className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
             >
               Try Again
