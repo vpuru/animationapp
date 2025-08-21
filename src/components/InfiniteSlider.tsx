@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
+import CarouselSkeleton from './CarouselSkeleton'
 
 interface InfiniteSliderProps {
   images: string[]
@@ -12,6 +13,7 @@ interface InfiniteSliderProps {
 export default function InfiniteSlider({ images, speed = 50, direction = 'left' }: InfiniteSliderProps) {
   const [isClient, setIsClient] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
     setIsClient(true)
@@ -21,8 +23,16 @@ export default function InfiniteSlider({ images, speed = 50, direction = 'left' 
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
+  useEffect(() => {
+    if (isClient) {
+      // Small delay to ensure smooth transition
+      const timer = setTimeout(() => setIsVisible(true), 100)
+      return () => clearTimeout(timer)
+    }
+  }, [isClient])
+
   if (!isClient) {
-    return null
+    return <CarouselSkeleton direction={direction} />
   }
 
   const duplicatedImages = [...images, ...images, ...images] // Triple to ensure smooth infinite scroll
@@ -31,7 +41,7 @@ export default function InfiniteSlider({ images, speed = 50, direction = 'left' 
   return (
     <div className="relative w-full overflow-hidden h-24 md:h-64">
       <div 
-        className={`flex ${direction === 'left' ? 'animate-slide-left' : 'animate-slide-right'}`}
+        className={`flex ${direction === 'left' ? 'animate-slide-left' : 'animate-slide-right'} transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
         style={{
           animationDuration: `${speed}s`,
           width: `${duplicatedImages.length * imageWidth}px`
@@ -45,13 +55,16 @@ export default function InfiniteSlider({ images, speed = 50, direction = 'left' 
               width={320}
               height={256}
               className="w-full h-full object-cover rounded-lg"
+              priority={index < 6} // Prioritize first 6 images for faster loading
+              placeholder="blur"
+              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBXWGaRmknyEQXeWBX/2Q=="
             />
           </div>
         ))}
       </div>
       
-      <div className="absolute inset-y-0 left-0 w-24 pointer-events-none z-10" style={{background: 'linear-gradient(to right, #EEF0EB 0%, rgba(238, 240, 235, 0.8) 50%, transparent 100%)'}} />
-      <div className="absolute inset-y-0 right-0 w-24 pointer-events-none z-10" style={{background: 'linear-gradient(to left, #EEF0EB 0%, rgba(238, 240, 235, 0.8) 50%, transparent 100%)'}} />
+      <div className="absolute inset-y-0 left-0 w-16 pointer-events-none z-10" style={{background: 'linear-gradient(to right, #EEF0EB, transparent)'}} />
+      <div className="absolute inset-y-0 right-0 w-16 pointer-events-none z-10" style={{background: 'linear-gradient(to left, #EEF0EB, transparent)'}} />
       
       <style jsx>{`
         @keyframes slide-left {
