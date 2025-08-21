@@ -104,6 +104,14 @@
     animation: wave 4s ease-in-out infinite;
   }
   
+  .animate-shine {
+    animation: shine 2s ease-in-out infinite;
+  }
+  
+  .app-background {
+    background-color: #EEF0EB;
+  }
+  
   @keyframes gradient-x {
     0%, 100% {
       background-position: 0% 50%;
@@ -119,6 +127,18 @@
     }
     50% {
       transform: translateY(-4px);
+    }
+  }
+  
+  @keyframes shine {
+    0% {
+      transform: translateX(-100%);
+    }
+    50% {
+      transform: translateX(100%);
+    }
+    100% {
+      transform: translateX(100%);
     }
   }
 }
