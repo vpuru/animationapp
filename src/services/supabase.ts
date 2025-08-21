@@ -28,7 +28,6 @@ export interface ImageState {
   uuid: string;
   input_bucket_id: string;
   output_bucket_id: string | null;
-  state: "in_progress" | "completed" | "failed";
   error_message: string | null;
   created_at: string;
   updated_at: string;
@@ -55,7 +54,6 @@ export const createImageState = async (uuid: string, inputBucketId: string) => {
     .insert({
       uuid,
       input_bucket_id: inputBucketId,
-      state: "in_progress",
     })
     .select()
     .single();
@@ -66,14 +64,15 @@ export const createImageState = async (uuid: string, inputBucketId: string) => {
   }
 
   // If the error is due to duplicate key (UUID already exists), fetch the existing record
-  if (insertError.code === '23505') { // PostgreSQL unique violation error code
+  if (insertError.code === "23505") {
+    // PostgreSQL unique violation error code
     console.log(`UUID ${uuid} already exists, fetching existing record`);
-    
+
     const existingRecord = await getImageState(uuid);
     if (existingRecord) {
       return existingRecord;
     }
-    
+
     // This shouldn't happen, but just in case
     throw new Error(`UUID ${uuid} exists but could not be retrieved`);
   }
@@ -84,7 +83,7 @@ export const createImageState = async (uuid: string, inputBucketId: string) => {
 
 export const updateImageState = async (
   uuid: string,
-  updates: Partial<Pick<ImageState, "state" | "output_bucket_id" | "error_message">>
+  updates: Partial<Pick<ImageState, "output_bucket_id" | "error_message">>
 ) => {
   const { data, error } = await supabaseAdmin
     .from("images_state")
@@ -136,8 +135,9 @@ export const uploadToOutputBucket = async (fileName: string, file: Blob) => {
   return data;
 };
 
-export const getPublicUrl = (bucketName: string, fileName: string) => {
-  const { data } = supabase.storage.from(bucketName).getPublicUrl(fileName);
+export const getPublicUrl = (uuid: string) => {
+  const outputBucketId = `${uuid}_ghibli.png`;
+  const { data } = supabase.storage.from("output_images").getPublicUrl(outputBucketId);
 
   return data.publicUrl;
 };

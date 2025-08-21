@@ -6,7 +6,7 @@ import FadingImages from "@/components/FadingImages";
 import ProgressBar from "@/components/ProgressBar";
 import CyclingText from "@/components/CyclingText";
 import StarRating from "@/components/StarRating";
-import { getPublicUrl } from "@/services/supabase";
+import { getImageState, createImageState } from "@/services/supabase";
 
 interface LoadingPageProps {
   params: Promise<{
@@ -15,7 +15,6 @@ interface LoadingPageProps {
 }
 
 export default function LoadingPage({ params }: LoadingPageProps) {
-  const [isProcessing, setIsProcessing] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [processingStage, setProcessingStage] = useState("Initializing...");
   const router = useRouter();
@@ -27,21 +26,41 @@ export default function LoadingPage({ params }: LoadingPageProps) {
       return;
     }
 
-    const checkImageExists = async () => {
-      // Try to get the processed image using expected output filename
-      const outputBucketId = `${uuid}_ghibli.png`; // or .jpg depending on your format
-      const imageUrl = getPublicUrl("output_images", outputBucketId);
-
-      // Test if image actually exists by trying to fetch it
-      const response = await fetch(imageUrl, { method: "HEAD" });
-
-      if (response.ok) {
-        router.push(`/paywall/${uuid}`);
-        return;
+    const checkDatabaseState = async () => {
+      try {
+        const existingState = await getImageState(uuid);
+        
+        if (!existingState) {
+          // No database entry - this is first time, create entry and start processing
+          console.log('No database entry found, creating new entry and starting processing');
+          await createImageState(uuid, `${uuid}.png`);
+          // Continue to processImage()
+          return false; // Indicates we should proceed with processing
+        }
+        
+        if (existingState.output_bucket_id) {
+          // Image already completed, redirect to paywall
+          console.log('Image already completed, redirecting to paywall');
+          router.push(`/paywall/${uuid}`);
+          return true; // Indicates we handled the request
+        } else {
+          // Entry exists but no output - processing in progress or failed (refresh case)
+          console.log('Processing already in progress or failed, redirecting home');
+          setError("Processing is already in progress. Please wait or try again later.");
+          setTimeout(() => {
+            router.push("/");
+          }, 3000);
+          return true; // Indicates we handled the request
+        }
+      } catch (err) {
+        console.error('Database check error:', err);
+        setError("Failed to check processing status");
+        setTimeout(() => {
+          router.push("/");
+        }, 3000);
+        return true; // Indicates we handled the request
       }
     };
-
-    checkImageExists();
 
     const processImage = async () => {
       try {
@@ -69,11 +88,22 @@ export default function LoadingPage({ params }: LoadingPageProps) {
       } catch (err) {
         console.error("Processing error:", err);
         setError(err instanceof Error ? err.message : "An unexpected error occurred");
-        setIsProcessing(false);
+
+        setTimeout(() => {
+          router.push("/");
+        }, 3000);
       }
     };
 
-    processImage();
+    const handleRequest = async () => {
+      const shouldSkipProcessing = await checkDatabaseState();
+      if (!shouldSkipProcessing) {
+        // Only call processImage if database check says we should proceed
+        processImage();
+      }
+    };
+
+    handleRequest();
   }, [uuid, router]);
 
   if (error) {
@@ -83,6 +113,7 @@ export default function LoadingPage({ params }: LoadingPageProps) {
           <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg">
             <h2 className="text-xl font-semibold mb-2">Processing Failed</h2>
             <p className="text-sm mb-4">{error}</p>
+            <p className="text-sm mb-4">Please try again. Redirecting to home in 3 seconds...</p>
             <button
               onClick={() => router.push("/")}
               className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"

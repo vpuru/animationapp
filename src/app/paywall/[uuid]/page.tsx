@@ -24,11 +24,8 @@ export default function PaywallPage({ params }: PaywallPageProps) {
 
     const checkImageExists = async () => {
       try {
-        // Try to get the processed image using expected output filename
-        const outputBucketId = `${uuid}_ghibli.png`; // or .jpg depending on your format
-        const imageUrl = getPublicUrl("output_images", outputBucketId);
+        const imageUrl = getPublicUrl(uuid);
 
-        // Test if image actually exists by trying to fetch it
         const response = await fetch(imageUrl, { method: "HEAD" });
 
         if (response.ok) {
