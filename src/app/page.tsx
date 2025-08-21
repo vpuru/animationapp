@@ -31,7 +31,7 @@ export default function Home() {
           </h1>
           {/* <h1 className="text-3xl md:text-5xl font-bold text-black">AI Headshot Generator</h1> */}
           <p className="text-gray-600 text-lg mt-6 max-w-2xl mx-auto">
-            Turn you and your friends into animated characters in seconds!
+            Couples photos, baby pictures, or even just a selfie - beautifully animated!
           </p>
           <div className="mt-8">
             <UploadButton />
@@ -43,7 +43,7 @@ export default function Home() {
         </div>
         <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           {testimonialsData.map((testimonial: TestimonialCardProps, index: number) => (
-            <TestimonialCard 
+            <TestimonialCard
               key={index}
               testimonial={testimonial.testimonial}
               userName={testimonial.userName}
