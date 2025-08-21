@@ -3,6 +3,7 @@
 import FadingImages from "@/components/FadingImages";
 import ProgressBar from "@/components/ProgressBar";
 import CyclingText from "@/components/CyclingText";
+import StarRating from "@/components/StarRating";
 
 export default function LoadingPage() {
   return (
@@ -19,8 +20,13 @@ export default function LoadingPage() {
         </div>
 
         {/* Cycling Text at the bottom */}
-        <div className="flex justify-center">
+        <div className="flex justify-center mb-8">
           <CyclingText />
+        </div>
+
+        {/* Star Rating */}
+        <div className="flex justify-center pt-20">
+          <StarRating />
         </div>
       </div>
     </div>
