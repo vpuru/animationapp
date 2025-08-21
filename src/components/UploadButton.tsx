@@ -3,6 +3,7 @@
 import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
+import imageCompression from "browser-image-compression";
 import { uploadToInputBucket, validateImageFile } from "@/services/supabase";
 
 export default function UploadButton() {
@@ -18,27 +19,11 @@ export default function UploadButton() {
     }
   };
 
-  const getFileExtension = (file: File) => {
-    // Use the MIME type to get the correct extension
-    switch (file.type) {
-      case "image/jpeg":
-        return "jpg";
-      case "image/png":
-        return "png";
-      case "image/webp":
-        return "webp";
-      case "image/heic":
-        return "jpg"; // HEIC will be converted to JPEG
-      default:
-        return "jpg"; // fallback
-    }
-  };
-
   const convertHeicToJpeg = async (file: File): Promise<File> => {
     try {
       // Dynamically import heic2any to avoid SSR issues
       const heic2any = (await import("heic2any")).default;
-      
+
       const convertedBlob = (await heic2any({
         blob: file,
         toType: "image/jpeg",
@@ -56,6 +41,75 @@ export default function UploadButton() {
     }
   };
 
+  const compressImageToPNG = async (file: File): Promise<File> => {
+    try {
+      // First, convert to PNG using canvas if not already PNG
+      let pngFile = file;
+
+      if (file.type !== "image/png") {
+        // Convert to PNG using canvas
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        const img = new Image();
+
+        // Create image from file
+        const imageUrl = URL.createObjectURL(file);
+
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          img.src = imageUrl;
+        });
+
+        // Set canvas size to image size
+        canvas.width = img.width;
+        canvas.height = img.height;
+
+        // Draw image to canvas
+        ctx?.drawImage(img, 0, 0);
+
+        // Convert canvas to PNG blob
+        const pngBlob = await new Promise<Blob>((resolve) => {
+          canvas.toBlob((blob) => resolve(blob!), "image/png", 1.0);
+        });
+
+        // Clean up
+        URL.revokeObjectURL(imageUrl);
+
+        // Create new PNG file
+        pngFile = new File([pngBlob], file.name.replace(/\.[^/.]+$/, ".png"), {
+          type: "image/png",
+          lastModified: file.lastModified,
+        });
+      }
+
+      // Check if already under 4MB
+      const maxSizeBytes = 4 * 1024 * 1024; // 4MB
+      if (pngFile.size <= maxSizeBytes) {
+        return pngFile;
+      }
+
+      // Compress the PNG to get under 4MB
+      const options = {
+        maxSizeMB: 3.8, // Target slightly under 4MB to be safe
+        maxWidthOrHeight: 1024, // Match OpenAI's expected size
+        useWebWorker: true,
+        fileType: "image/png" as const,
+      };
+
+      const compressedFile = await imageCompression(pngFile, options);
+
+      // Ensure it's still a PNG with correct extension
+      return new File([compressedFile], file.name.replace(/\.[^/.]+$/, ".png"), {
+        type: "image/png",
+        lastModified: file.lastModified,
+      });
+    } catch (error) {
+      console.error("PNG compression error:", error);
+      throw new Error("Failed to compress image to PNG format. Please try a smaller image.");
+    }
+  };
+
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -68,33 +122,26 @@ export default function UploadButton() {
       // Validate file
       validateImageFile(file);
 
-      // Convert HEIC to JPEG if needed
-      let fileToUpload = file;
+      // Step 1: Convert HEIC to JPEG if needed
+      let processedFile = file;
       if (file.type === "image/heic") {
-        fileToUpload = await convertHeicToJpeg(file);
+        setUploadProgress(20);
+        processedFile = await convertHeicToJpeg(file);
       }
+
+      // Step 2: Compress to PNG format < 4MB for OpenAI compatibility
+      setUploadProgress(40);
+      const pngFile = await compressImageToPNG(processedFile);
 
       // Generate UUID for this upload
       const imageUuid = uuidv4();
-      const fileExtension = getFileExtension(fileToUpload);
-      const fileName = `${imageUuid}.${fileExtension}`;
+      const fileName = `${imageUuid}.png`; // Always PNG now
 
-      // Simulate upload progress (Supabase doesn't provide real progress)
-      const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + 10;
-        });
-      }, 200);
+      setUploadProgress(60);
 
       // Upload to Supabase
-      await uploadToInputBucket(fileToUpload, fileName);
+      await uploadToInputBucket(pngFile, fileName);
 
-      // Complete progress
-      clearInterval(progressInterval);
       setUploadProgress(100);
 
       // Small delay to show 100% progress

@@ -56,34 +56,21 @@ export async function POST(
     }
 
     try {
-      // First, we need to find the actual file in the bucket since we don't know the extension
-      // We'll try common extensions in order of preference
-      const possibleExtensions = ['jpg', 'jpeg', 'png', 'webp']
-      let inputImageBlob: Blob | null = null
-      let actualInputBucketId = ''
-
-      for (const ext of possibleExtensions) {
-        const testFileName = `${uuid}.${ext}`
-        try {
-          inputImageBlob = await downloadFromInputBucket(testFileName)
-          actualInputBucketId = testFileName
-          console.log(`Found image with extension: ${ext}`)
-          break
-        } catch (error) {
-          // Continue to next extension
-          continue
-        }
-      }
-
-      if (!inputImageBlob || !actualInputBucketId) {
-        throw new Error('Could not find uploaded image with any supported extension')
+      // Since we now always upload PNG files, look for PNG specifically
+      const inputBucketId = `${uuid}.png`
+      
+      console.log(`Downloading PNG image: ${inputBucketId}`)
+      const inputImageBlob = await downloadFromInputBucket(inputBucketId)
+      
+      if (!inputImageBlob) {
+        throw new Error('Could not find uploaded PNG image')
       }
 
       // Create database entry for tracking (only if it doesn't exist)
       let imageState
       if (!existingState) {
         // Create new entry only if no existing state
-        imageState = await createImageState(uuid, actualInputBucketId)
+        imageState = await createImageState(uuid, inputBucketId)
       } else {
         // Use existing state - don't overwrite completed or other states
         imageState = existingState
