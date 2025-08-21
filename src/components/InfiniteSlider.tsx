@@ -25,7 +25,7 @@ export default function InfiniteSlider({ images, speed = 50, direction = 'left' 
     return null
   }
 
-  const duplicatedImages = [...images, ...images]
+  const duplicatedImages = [...images, ...images, ...images] // Triple to ensure smooth infinite scroll
   const imageWidth = isMobile ? 176 : 336 // 40*4 = 160 + margins = ~176, 80*4 = 320 + margins = ~336
 
   return (
@@ -59,13 +59,13 @@ export default function InfiniteSlider({ images, speed = 50, direction = 'left' 
             transform: translateX(0);
           }
           100% {
-            transform: translateX(-50%);
+            transform: translateX(-33.333%);
           }
         }
         
         @keyframes slide-right {
           0% {
-            transform: translateX(-50%);
+            transform: translateX(-33.333%);
           }
           100% {
             transform: translateX(0);

@@ -12,12 +12,15 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen text-gray-900" style={{ backgroundColor: "#EEF0EB" }}>
-      <div className="container mx-auto px-4 py-8">
+    <div
+      className="min-h-screen text-gray-900 flex flex-col items-center justify-center"
+      style={{ backgroundColor: "#EEF0EB" }}
+    >
+      <div className="container mx-auto px-4 py-8 flex flex-col items-center">
         <div className="text-center mb-8">
           <h1 className="text-7xl md:text-5xl font-bold mb-2">
             Your World, <br />
-            <span className="bg-gradient-to-r from-blue-500 to-blue-700 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-blue-400 via-blue-600 to-blue-800 bg-clip-text text-transparent animate-gradient-x">
               Animated
             </span>
           </h1>
@@ -30,7 +33,7 @@ export default function Home() {
           <InfiniteSlider images={mockHeadshots} speed={30} direction="left" />
           <InfiniteSlider images={mockHeadshots} speed={30} direction="right" />
         </div>
-        <div className="flex justify-center my-12">
+        <div className="my-12">
           <UploadButton />
         </div>
       </div>
