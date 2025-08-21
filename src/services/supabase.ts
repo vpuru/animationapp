@@ -49,23 +49,37 @@ export const uploadToInputBucket = async (file: File, fileName: string) => {
 };
 
 export const createImageState = async (uuid: string, inputBucketId: string) => {
-  const { data, error } = await supabaseAdmin
+  // First, try to insert a new record
+  const { data: insertData, error: insertError } = await supabaseAdmin
     .from("images_state")
-    .insert([
-      {
-        uuid,
-        input_bucket_id: inputBucketId,
-        state: "in_progress",
-      },
-    ])
+    .insert({
+      uuid,
+      input_bucket_id: inputBucketId,
+      state: "in_progress",
+    })
     .select()
     .single();
 
-  if (error) {
-    throw new Error(`Failed to create image state: ${error.message}`);
+  // If insert succeeded, return the new record
+  if (!insertError) {
+    return insertData as ImageState;
   }
 
-  return data as ImageState;
+  // If the error is due to duplicate key (UUID already exists), fetch the existing record
+  if (insertError.code === '23505') { // PostgreSQL unique violation error code
+    console.log(`UUID ${uuid} already exists, fetching existing record`);
+    
+    const existingRecord = await getImageState(uuid);
+    if (existingRecord) {
+      return existingRecord;
+    }
+    
+    // This shouldn't happen, but just in case
+    throw new Error(`UUID ${uuid} exists but could not be retrieved`);
+  }
+
+  // For any other error, throw it
+  throw new Error(`Failed to create image state: ${insertError.message}`);
 };
 
 export const updateImageState = async (
