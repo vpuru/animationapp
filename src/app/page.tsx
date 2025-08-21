@@ -1,6 +1,7 @@
 import Image from "next/image";
 import InfiniteSlider from "@/components/InfiniteSlider";
 import EndorsementCard from "@/components/EndorsementCard";
+import UploadButton from "@/components/UploadButton";
 
 export default function Home() {
   const mockHeadshots = [
@@ -28,6 +29,9 @@ export default function Home() {
         <div className="space-y-4 md:space-y-8">
           <InfiniteSlider images={mockHeadshots} speed={30} direction="left" />
           <InfiniteSlider images={mockHeadshots} speed={30} direction="right" />
+        </div>
+        <div className="flex justify-center my-12">
+          <UploadButton />
         </div>
       </div>
     </div>

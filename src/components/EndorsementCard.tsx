@@ -6,7 +6,7 @@ export default function EndorsementCard() {
       className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border shadow-sm"
       style={{ backgroundColor: "#cee5f5", borderColor: "#284B63" }}
     >
-      <span className="text-sm font-medium text-black">#1 RANKED AI CARTOON COMPANY</span>
+      <span className="text-sm font-medium text-black"> - Your stickers</span>
     </div>
   );
 }
