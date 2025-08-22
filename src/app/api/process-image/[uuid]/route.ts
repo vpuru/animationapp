@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { v4 as uuidv4 } from 'uuid'
 import { 
   updateImageState, 
   downloadFromInputBucket, 
   uploadToOutputBucket,
+  uploadToPreviewBucket,
   getImageState 
 } from '@/services/supabase'
 import { 
@@ -10,6 +12,7 @@ import {
   downloadImageFromUrl, 
   getFileExtension 
 } from '@/services/openai'
+import { addPadlockOverlay } from '@/services/imageProcessing'
 
 export async function POST(
   request: NextRequest,
@@ -34,12 +37,13 @@ export async function POST(
       )
     }
 
-    if (existingState.output_bucket_id) {
+    if (existingState.output_bucket_id && existingState.preview_bucket_id) {
       // Image already processed successfully
       return NextResponse.json({ 
         success: true, 
         message: 'Image already processed',
-        outputBucketId: existingState.output_bucket_id
+        outputBucketId: existingState.output_bucket_id,
+        previewBucketId: existingState.preview_bucket_id
       })
     }
 
@@ -71,17 +75,28 @@ export async function POST(
       console.log('Downloading processed image from OpenAI...')
       const processedImageBlob = await downloadImageFromUrl(ghibliImageUrl)
       
-      // Generate output filename with correct extension
+      // Generate random UUID for full resolution output
+      const outputUuid = uuidv4()
       const fileExtension = getFileExtension(processedImageBlob)
-      const outputBucketId = `${uuid}_ghibli.${fileExtension}`
+      const outputBucketId = `${outputUuid}_ghibli.${fileExtension}`
       
-      // Upload processed image to output bucket
-      console.log(`Uploading processed image ${outputBucketId} to output bucket...`)
+      // Upload full resolution image to output bucket
+      console.log(`Uploading full resolution image ${outputBucketId} to output bucket...`)
       await uploadToOutputBucket(outputBucketId, processedImageBlob)
       
-      // Update database with output bucket
+      // Create preview image with padlock overlay
+      console.log('Creating preview image with padlock overlay...')
+      const previewImageBlob = await addPadlockOverlay(processedImageBlob)
+      const previewBucketId = `${uuid}.png`
+      
+      // Upload preview image to preview bucket
+      console.log(`Uploading preview image ${previewBucketId} to preview bucket...`)
+      await uploadToPreviewBucket(previewBucketId, previewImageBlob)
+      
+      // Update database with both bucket IDs
       await updateImageState(uuid, {
-        output_bucket_id: outputBucketId
+        output_bucket_id: outputBucketId,
+        preview_bucket_id: previewBucketId
       })
 
       console.log(`Successfully processed image ${uuid}`)
@@ -89,7 +104,8 @@ export async function POST(
       return NextResponse.json({ 
         success: true, 
         message: 'Image processed successfully',
-        outputBucketId
+        outputBucketId,
+        previewBucketId
       })
 
     } catch (processingError) {

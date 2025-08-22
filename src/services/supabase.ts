@@ -28,6 +28,7 @@ export interface ImageState {
   uuid: string;
   input_bucket_id: string;
   output_bucket_id: string | null;
+  preview_bucket_id: string | null;
   error_message: string | null;
   created_at: string;
   updated_at: string;
@@ -83,7 +84,7 @@ export const createImageState = async (uuid: string, inputBucketId: string) => {
 
 export const updateImageState = async (
   uuid: string,
-  updates: Partial<Pick<ImageState, "output_bucket_id" | "error_message">>
+  updates: Partial<Pick<ImageState, "output_bucket_id" | "preview_bucket_id" | "error_message">>
 ) => {
   const { data, error } = await supabaseAdmin
     .from("images_state")
@@ -135,9 +136,31 @@ export const uploadToOutputBucket = async (fileName: string, file: Blob) => {
   return data;
 };
 
+export const uploadToPreviewBucket = async (fileName: string, file: Blob) => {
+  const { data, error } = await supabaseAdmin.storage
+    .from("preview_images")
+    .upload(fileName, file, {
+      cacheControl: "3600",
+      upsert: false,
+    });
+
+  if (error) {
+    throw new Error(`Upload to preview bucket failed: ${error.message}`);
+  }
+
+  return data;
+};
+
 export const getPublicUrl = (uuid: string) => {
   const outputBucketId = `${uuid}_ghibli.png`;
   const { data } = supabase.storage.from("output_images").getPublicUrl(outputBucketId);
+
+  return data.publicUrl;
+};
+
+export const getPreviewUrl = (uuid: string) => {
+  const previewBucketId = `${uuid}.png`;
+  const { data } = supabase.storage.from("preview_images").getPublicUrl(previewBucketId);
 
   return data.publicUrl;
 };
