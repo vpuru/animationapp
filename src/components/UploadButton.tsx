@@ -19,41 +19,37 @@ export default function UploadButton() {
     }
   };
 
-  const convertHeicToJpeg = async (file: File): Promise<File> => {
+  const convertToPNG = async (file: File): Promise<File> => {
     try {
-      // Dynamically import heic2any to avoid SSR issues
-      const heic2any = (await import("heic2any")).default;
+      let sourceFile = file;
 
-      const convertedBlob = (await heic2any({
-        blob: file,
-        toType: "image/jpeg",
-        quality: 0.8,
-      })) as Blob;
+      // Handle HEIC files first
+      if (file.type === "image/heic" || file.name.toLowerCase().endsWith('.heic')) {
+        // Dynamically import heic2any to avoid SSR issues
+        const heic2any = (await import("heic2any")).default;
 
-      // Create a new File object from the converted blob
-      return new File([convertedBlob], file.name.replace(/\.heic$/i, ".jpg"), {
-        type: "image/jpeg",
-        lastModified: file.lastModified,
-      });
-    } catch (error) {
-      console.error("HEIC conversion error:", error);
-      throw new Error("Failed to convert HEIC image. Please try a different format.");
-    }
-  };
+        const convertedBlob = (await heic2any({
+          blob: file,
+          toType: "image/png",
+          quality: 1.0,
+        })) as Blob;
 
-  const compressImageToPNG = async (file: File): Promise<File> => {
-    try {
-      // First, convert to PNG using canvas if not already PNG
-      let pngFile = file;
+        sourceFile = new File([convertedBlob], file.name.replace(/\.heic$/i, ".png"), {
+          type: "image/png",
+          lastModified: file.lastModified,
+        });
+      }
 
-      if (file.type !== "image/png") {
-        // Convert to PNG using canvas
+      // If already PNG, proceed to compression check
+      let pngFile = sourceFile;
+
+      // Convert non-PNG formats to PNG using canvas
+      if (sourceFile.type !== "image/png") {
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
         const img = new Image();
 
-        // Create image from file
-        const imageUrl = URL.createObjectURL(file);
+        const imageUrl = URL.createObjectURL(sourceFile);
 
         await new Promise((resolve, reject) => {
           img.onload = resolve;
@@ -61,52 +57,45 @@ export default function UploadButton() {
           img.src = imageUrl;
         });
 
-        // Set canvas size to image size
         canvas.width = img.width;
         canvas.height = img.height;
-
-        // Draw image to canvas
         ctx?.drawImage(img, 0, 0);
 
-        // Convert canvas to PNG blob
         const pngBlob = await new Promise<Blob>((resolve) => {
           canvas.toBlob((blob) => resolve(blob!), "image/png", 1.0);
         });
 
-        // Clean up
         URL.revokeObjectURL(imageUrl);
 
-        // Create new PNG file
         pngFile = new File([pngBlob], file.name.replace(/\.[^/.]+$/, ".png"), {
           type: "image/png",
           lastModified: file.lastModified,
         });
       }
 
-      // Check if already under 4MB
-      const maxSizeBytes = 4 * 1024 * 1024; // 4MB
+      // Check if compression is needed (4MB limit)
+      const maxSizeBytes = 4 * 1024 * 1024;
       if (pngFile.size <= maxSizeBytes) {
         return pngFile;
       }
 
-      // Compress the PNG to get under 4MB
+      // Compress PNG to get under 4MB
       const options = {
-        maxSizeMB: 3.8, // Target slightly under 4MB to be safe
-        maxWidthOrHeight: 1024, // Match OpenAI's expected size
+        maxSizeMB: 3.8,
+        maxWidthOrHeight: 1024,
         useWebWorker: true,
         fileType: "image/png" as const,
       };
 
       const compressedFile = await imageCompression(pngFile, options);
 
-      // Ensure it's still a PNG with correct extension
       return new File([compressedFile], file.name.replace(/\.[^/.]+$/, ".png"), {
         type: "image/png",
         lastModified: file.lastModified,
       });
     } catch (error) {
-      console.error("PNG compression error:", error);
-      throw new Error("Failed to compress image to PNG format. Please try a smaller image.");
+      console.error("Image conversion error:", error);
+      throw new Error("Failed to convert image to PNG format. Please try a different image.");
     }
   };
 
@@ -122,20 +111,13 @@ export default function UploadButton() {
       // Validate file
       validateImageFile(file);
 
-      // Step 1: Convert HEIC to JPEG if needed
-      let processedFile = file;
-      if (file.type === "image/heic") {
-        setUploadProgress(20);
-        processedFile = await convertHeicToJpeg(file);
-      }
-
-      // Step 2: Compress to PNG format < 4MB for OpenAI compatibility
-      setUploadProgress(40);
-      const pngFile = await compressImageToPNG(processedFile);
+      // Convert to PNG and compress if needed
+      setUploadProgress(20);
+      const pngFile = await convertToPNG(file);
 
       // Generate UUID for this upload
       const imageUuid = uuidv4();
-      const fileName = `${imageUuid}.png`; // Always PNG now
+      const fileName = `${imageUuid}.png`;
 
       setUploadProgress(60);
 
