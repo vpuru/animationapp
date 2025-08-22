@@ -6,7 +6,7 @@ import gimmickyMessages from "@/data/gimmick.json";
 
 // Weave gimmicky messages and testimonials: 1, 0, 1, 0, etc.
 const maxLen = Math.max(gimmickyMessages.length, testimonialsData.length);
-const allMessages: any[] = [];
+const allMessages: Array<{ type: string; content: string }> = [];
 for (let i = 0; i < maxLen; i++) {
   if (i < gimmickyMessages.length) {
     allMessages.push({ type: "gimmicky", content: gimmickyMessages[i] });

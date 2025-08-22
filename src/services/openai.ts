@@ -91,7 +91,7 @@ const generateFullTransparentMask = async (width: number, height: number): Promi
       .toBuffer();
 
     // Convert buffer to File
-    const blob = new Blob([transparentBuffer], { type: "image/png" });
+    const blob = new Blob([new Uint8Array(transparentBuffer)], { type: "image/png" });
     return new File([blob], "mask.png", { type: "image/png" });
   } catch (error) {
     throw new Error(
@@ -117,7 +117,7 @@ const generateSemiTransparentMask = async (width: number, height: number): Promi
       .toBuffer();
 
     // Convert buffer to File
-    const blob = new Blob([semiTransparentBuffer], { type: "image/png" });
+    const blob = new Blob([new Uint8Array(semiTransparentBuffer)], { type: "image/png" });
     return new File([blob], "mask.png", { type: "image/png" });
   } catch (error) {
     throw new Error(
@@ -171,7 +171,7 @@ const generateCenterPreservingMask = async (width: number, height: number): Prom
       .toBuffer();
 
     // Convert buffer to File
-    const blob = new Blob([maskBuffer], { type: "image/png" });
+    const blob = new Blob([new Uint8Array(maskBuffer)], { type: "image/png" });
     return new File([blob], "mask.png", { type: "image/png" });
   } catch (error) {
     throw new Error(

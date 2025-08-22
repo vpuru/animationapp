@@ -1,6 +1,4 @@
-import Image from "next/image";
 import InfiniteSlider from "@/components/InfiniteSlider";
-import EndorsementCard from "@/components/EndorsementCard";
 import UploadButton from "@/components/UploadButton";
 import AnimatedWaveText from "@/components/AnimatedWaveText";
 import MyPictures from "@/components/MyPictures";

@@ -44,7 +44,7 @@ export default function TestimonialCard({
 
         {/* Testimonial Text */}
         <div className="flex-1">
-          <p className="text-gray-800 text-md leading-relaxed">"{testimonial}"</p>
+          <p className="text-gray-800 text-md leading-relaxed">&ldquo;{testimonial}&rdquo;</p>
         </div>
       </div>
     </div>

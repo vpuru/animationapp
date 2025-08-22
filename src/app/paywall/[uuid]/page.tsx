@@ -2,6 +2,7 @@
 
 import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { getPublicUrl } from "@/services/supabase";
 
 interface PaywallPageProps {
@@ -63,9 +64,11 @@ export default function PaywallPage({ params }: PaywallPageProps) {
   return (
     <div className="min-h-screen app-background flex flex-col items-center justify-center px-4">
       <div className="text-center">
-        <img
+        <Image
           src={processedImageUrl}
           alt="Your processed image"
+          width={800}
+          height={600}
           className="max-w-2xl max-h-96 w-auto h-auto rounded-lg shadow-lg mb-8"
         />
         <button

@@ -5,7 +5,7 @@ interface AnimatedWaveTextProps {
   className?: string;
 }
 
-export default function AnimatedWaveText({ text, className = "" }: AnimatedWaveTextProps) {
+export default function AnimatedWaveText({ text }: AnimatedWaveTextProps) {
   const letters = text.split("");
 
   return (

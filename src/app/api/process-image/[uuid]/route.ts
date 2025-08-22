@@ -13,9 +13,9 @@ import {
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { uuid: string } }
+  { params }: { params: Promise<{ uuid: string }> }
 ) {
-  const { uuid } = params
+  const { uuid } = await params
 
   if (!uuid) {
     return NextResponse.json(
