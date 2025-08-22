@@ -124,7 +124,7 @@ export default function PaywallPage({ params }: PaywallPageProps) {
   }
 
   return (
-    <div className="min-h-screen app-background flex flex-col items-center justify-center px-4 py-8">
+    <div className="min-h-screen app-background flex flex-col items-center px-4 py-8">
       <div className="w-full max-w-md mx-auto">
         {/* Hero Image with Overlay */}
         <PaywallHero
@@ -134,24 +134,17 @@ export default function PaywallPage({ params }: PaywallPageProps) {
           onImageError={() => setError("Failed to load preview image")}
         />
 
-        {/* Features List */}
-        <PaywallFeatures />
+        {/* White Container with Shadow - overlapping image slightly */}
+        <div className="bg-white rounded-2xl p-6 shadow-2xl -mt-4 relative z-10">
+          {/* Features List */}
+          <PaywallFeatures />
 
-        {/* Pricing and Payment */}
-        <PaywallPricing onUnlock={handleUnlock} isUnlocking={isUnlocking} />
+          {/* Pricing and Payment */}
+          <PaywallPricing onUnlock={handleUnlock} isUnlocking={isUnlocking} />
 
-        {/* Security Badges */}
-        <PaywallSecurity />
-
-        {/* Back to Home Link */}
-        {/* <div className="text-center mt-6">
-          <button
-            onClick={() => router.push("/")}
-            className="text-blue-600 hover:text-blue-800 transition-colors text-sm"
-          >
-            Back to Home
-          </button>
-        </div> */}
+          {/* Security Badges */}
+          <PaywallSecurity />
+        </div>
       </div>
     </div>
   );

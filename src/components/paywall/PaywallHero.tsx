@@ -14,7 +14,7 @@ export default function PaywallHero({
   onImageError,
 }: PaywallHeroProps) {
   return (
-    <div className="relative rounded-lg shadow-lg mb-8">
+    <div className="relative mb-0">
       {/* Skeleton placeholder */}
       {!imageLoaded && (
         <div className="w-96 h-96 bg-gray-200 animate-pulse rounded-lg flex items-center justify-center mx-auto">
@@ -48,10 +48,10 @@ export default function PaywallHero({
 
           {/* Overlay text - positioned at bottom */}
           {imageLoaded && (
-            <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2">
+            <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 z-20">
               <div className="bg-white rounded-lg px-3 py-1.5 shadow-xl border-2 border-gray-800 transform -rotate-1 min-w-max">
-                <h2 className="text-sm font-black text-gray-800 text-center leading-tight whitespace-pre-line">
-                  {"unlock your\nanimation now!"}
+                <h2 className="text-lg font-black text-gray-800 text-center leading-tight whitespace-pre-line">
+                  {"Unlock Your\nAnimation Now!"}
                 </h2>
               </div>
             </div>
