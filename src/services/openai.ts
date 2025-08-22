@@ -236,12 +236,12 @@ export const transformImageToGhibli = async (imageFile: Blob): Promise<string> =
       mask: maskFile,
       prompt:
         "Restyle this image in a Studio Ghibli–inspired look: " +
-        "hand-painted watercolor backgrounds, soft pastel palette, " +
-        "warm golden lighting, gentle linework, and subtle film-grain. " +
+        "hand-painted watercolor backgrounds, authentic colors that match the original photo, " +
+        "warm and natural lighting, gentle linework, and subtle film-grain. " +
         "Depict the subject with the flattering, soft stylization typical " +
-        "of Ghibli characters: smooth skin, rounded features, expressive eyes, " +
-        "and simplified but recognizable likeness. " +
-        "Avoid caricature or exaggerated proportions. " +
+        "of Ghibli characters: smooth skin, rounded features, expressive and well-defined eyes, " +
+        "and animated but recognizable likeness with proper facial proportions. " +
+        "Ensure the faces are clear, natural, and expressive, avoiding distortion or funky exaggeration. " +
         "Maintain the subject's identity, pose, camera framing, " +
         "and overall scene composition.",
       n: 1,

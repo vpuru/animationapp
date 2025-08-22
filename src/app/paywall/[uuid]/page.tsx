@@ -41,15 +41,9 @@ export default function PaywallPage({ params }: PaywallPageProps) {
           return;
         }
 
-        // Get preview image URL
+        // Get preview image URL and set it directly
         const previewUrl = getPreviewUrl(uuid);
-        const response = await fetch(previewUrl, { method: "HEAD" });
-
-        if (response.ok) {
-          setPreviewImageUrl(previewUrl);
-        } else {
-          setError("Preview image not found");
-        }
+        setPreviewImageUrl(previewUrl);
       } catch (err) {
         console.error("Error checking image:", err);
         setError("Failed to load preview image");
@@ -140,14 +134,17 @@ export default function PaywallPage({ params }: PaywallPageProps) {
           )}
           
           {/* Actual preview image */}
-          {imageLoaded && (
+          {previewImageUrl && (
             <Image
               src={previewImageUrl}
               alt="Preview of your processed image"
               width={0}
               height={0}
-              className="w-auto h-auto max-w-full max-h-[80vh] rounded-lg mx-auto block"
+              className={`w-auto h-auto max-w-full max-h-[80vh] rounded-lg mx-auto block transition-opacity duration-300 ${
+                imageLoaded ? 'opacity-100' : 'opacity-0'
+              }`}
               onLoad={() => setImageLoaded(true)}
+              onError={() => setError("Failed to load preview image")}
               priority
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, auto"
               style={{ width: 'auto', height: 'auto' }}
