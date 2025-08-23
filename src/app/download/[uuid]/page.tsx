@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getImageState, supabase } from '@/services/supabase';
+import { getImageState, getImageUrl } from '@/services/supabase';
 import type { ImageState } from '@/services/supabase';
 
 interface DownloadPageProps {
@@ -50,25 +50,25 @@ export default function DownloadPage({ params }: DownloadPageProps) {
     loadImage();
   }, [uuid]);
 
-  const getImageUrl = () => {
-    if (!image?.output_bucket_id) return '';
-    const { data } = supabase.storage.from("output_images").getPublicUrl(image.output_bucket_id);
-    return data.publicUrl;
-  };
-
   const handleDownload = () => {
-    const imageUrl = getImageUrl();
-    window.open(imageUrl, '_blank');
+    if (!image) return;
+    const imageUrl = getImageUrl(image);
+    if (imageUrl) {
+      window.open(imageUrl, '_blank');
+    }
   };
 
   const handleCopyLink = async () => {
-    const imageUrl = getImageUrl();
-    try {
-      await navigator.clipboard.writeText(imageUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy link:', err);
+    if (!image) return;
+    const imageUrl = getImageUrl(image);
+    if (imageUrl) {
+      try {
+        await navigator.clipboard.writeText(imageUrl);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) {
+        console.error('Failed to copy link:', err);
+      }
     }
   };
 
@@ -92,7 +92,7 @@ export default function DownloadPage({ params }: DownloadPageProps) {
     );
   }
 
-  const imageUrl = getImageUrl();
+  const imageUrl = image ? getImageUrl(image) : null;
 
   return (
     <div className="min-h-screen app-background">

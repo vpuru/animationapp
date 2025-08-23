@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getCurrentUserId } from '@/lib/auth';
-import { getUserImages, supabase } from '@/services/supabase';
+import { getUserImages, getImageUrl } from '@/services/supabase';
 import type { ImageState } from '@/services/supabase';
 
 export default function GalleryPage() {
@@ -77,14 +77,7 @@ export default function GalleryPage() {
             </div>
           ) : (
             images.map((image) => {
-            let imageUrl = '';
-            if (image.purchased && image.output_bucket_id) {
-              const { data } = supabase.storage.from("output_images").getPublicUrl(image.output_bucket_id);
-              imageUrl = data.publicUrl;
-            } else if (image.preview_bucket_id) {
-              const { data } = supabase.storage.from("preview_images").getPublicUrl(image.preview_bucket_id);
-              imageUrl = data.publicUrl;
-            }
+            const imageUrl = getImageUrl(image);
 
             return (
               <div key={image.uuid} className="relative group">

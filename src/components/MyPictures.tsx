@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { getCurrentUserId, ensureAnonymousUser } from "@/lib/auth";
-import { getUserImages, supabase } from "@/services/supabase";
+import { getUserImages, getImageUrl } from "@/services/supabase";
 import type { ImageState } from "@/services/supabase";
 
 interface MyPicturesProps {
@@ -20,6 +20,7 @@ export default function MyPictures({
 }: MyPicturesProps) {
   const [userImages, setUserImages] = useState<ImageState[]>([]);
   const [imageCount, setImageCount] = useState(0);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
@@ -33,6 +34,8 @@ export default function MyPictures({
         }
       } catch (err) {
         console.error("Failed to load user images:", err);
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -43,23 +46,7 @@ export default function MyPictures({
     router.push("/gallery");
   };
 
-  const displayImages =
-    userImages.length > 0
-      ? userImages.map((img) => {
-          if (img.purchased && img.output_bucket_id) {
-            const { data } = supabase.storage
-              .from("output_images")
-              .getPublicUrl(img.output_bucket_id);
-            return data.publicUrl;
-          } else if (img.preview_bucket_id) {
-            const { data } = supabase.storage
-              .from("preview_images")
-              .getPublicUrl(img.preview_bucket_id);
-            return data.publicUrl;
-          }
-          return images[0]; // fallback to default image
-        })
-      : images;
+  const displayImages = userImages.map(getImageUrl).filter(Boolean);
 
   return (
     <div
@@ -90,19 +77,28 @@ export default function MyPictures({
 
       {/* Image Bubbles */}
       <div className="flex -space-x-2">
-        {displayImages.slice(0, 3).map((image, index) => (
-          <div key={index} className="relative">
-            <div className="w-8 h-8 rounded-lg overflow-hidden border-2 border-white shadow-sm">
-              <Image
-                src={image}
-                alt={`Picture ${index + 1}`}
-                width={32}
-                height={32}
-                className="w-full h-full object-cover"
-              />
+        {loading ? (
+          // Skeleton loaders
+          Array.from({ length: 3 }).map((_, index) => (
+            <div key={`skeleton-${index}`} className="relative">
+              <div className="w-8 h-8 rounded-lg bg-gray-200 animate-pulse border-2 border-white shadow-sm"></div>
             </div>
-          </div>
-        ))}
+          ))
+        ) : (
+          displayImages.slice(0, 3).map((image, index) => (
+            <div key={index} className="relative">
+              <div className="w-8 h-8 rounded-lg overflow-hidden border-2 border-white shadow-sm">
+                <Image
+                  src={image}
+                  alt={`Picture ${index + 1}`}
+                  width={32}
+                  height={32}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+          ))
+        )}
 
         {/* Counter bubble */}
         <div className="w-8 h-8 rounded-lg bg-pink-400 border-2 border-white shadow-sm flex items-center justify-center">

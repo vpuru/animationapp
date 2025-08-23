@@ -168,6 +168,17 @@ export const getPreviewUrl = (uuid: string) => {
   return data.publicUrl;
 };
 
+export const getImageUrl = (image: ImageState): string | null => {
+  if (image.purchased && image.output_bucket_id) {
+    const { data } = supabase.storage.from("output_images").getPublicUrl(image.output_bucket_id);
+    return data.publicUrl;
+  } else if (image.preview_bucket_id) {
+    const { data } = supabase.storage.from("preview_images").getPublicUrl(image.preview_bucket_id);
+    return data.publicUrl;
+  }
+  return null;
+};
+
 export const getUserImages = async (userId: string): Promise<ImageState[]> => {
   const { data, error } = await supabase
     .from("images_state")
