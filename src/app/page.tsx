@@ -20,7 +20,7 @@ export default function Home() {
           <MyPictures />
         </div>
         <div className="text-center mb-8 mt-10">
-          <h1 className="text-7xl md:text-2xl font-bold mb-2">
+          <h1 className="text-7xl md:text-9xl font-bold mb-2">
             Your World, <br />
             <AnimatedWaveText
               text="Animated"

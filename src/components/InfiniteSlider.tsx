@@ -12,15 +12,10 @@ interface InfiniteSliderProps {
 
 export default function InfiniteSlider({ images, speed = 50, direction = 'left' }: InfiniteSliderProps) {
   const [isClient, setIsClient] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
     setIsClient(true)
-    const checkMobile = () => setIsMobile(window.innerWidth < 768)
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
   useEffect(() => {
@@ -36,19 +31,17 @@ export default function InfiniteSlider({ images, speed = 50, direction = 'left' 
   }
 
   const duplicatedImages = [...images, ...images, ...images] // Triple to ensure smooth infinite scroll
-  const imageWidth = isMobile ? 176 : 336 // 40*4 = 160 + margins = ~176, 80*4 = 320 + margins = ~336
 
   return (
-    <div className="relative w-full overflow-hidden h-24 md:h-64">
+    <div className="relative w-full overflow-hidden h-24 md:h-40">
       <div 
         className={`flex ${direction === 'left' ? 'animate-slide-left' : 'animate-slide-right'} transition-opacity duration-500 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
         style={{
-          animationDuration: `${speed}s`,
-          width: `${duplicatedImages.length * imageWidth}px`
+          animationDuration: `${speed}s`
         }}
       >
         {duplicatedImages.map((image, index) => (
-          <div key={index} className="flex-shrink-0 w-40 h-24 md:w-80 md:h-64 mx-2">
+          <div key={index} className="flex-shrink-0 w-40 h-24 md:w-60 md:h-40 mx-2">
             <Image
               src={image}
               alt={`Headshot ${index + 1}`}

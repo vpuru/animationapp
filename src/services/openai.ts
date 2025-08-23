@@ -235,15 +235,7 @@ export const transformImageToGhibli = async (imageFile: Blob): Promise<string> =
       image: inputFile,
       mask: maskFile,
       prompt:
-        "Restyle this image in a Studio Ghibli–inspired look: " +
-        "hand-painted watercolor backgrounds, authentic colors that match the original photo, " +
-        "warm and natural lighting, gentle linework, and subtle film-grain. " +
-        "Depict the subject with the flattering, soft stylization typical " +
-        "of Ghibli characters: smooth skin, rounded features, expressive and well-defined eyes, " +
-        "and animated but recognizable likeness with proper facial proportions. " +
-        "Ensure the faces are clear, natural, and expressive, avoiding distortion or funky exaggeration. " +
-        "Maintain the subject's identity, pose, camera framing, " +
-        "and overall scene composition.",
+        "Convert the input photo into a Studio Ghibli–inspired, hand-drawn animation portrait with clean line art and soft cel shading. Preserve the person’s identity (same face shape, eye spacing and gaze, nose/mouth position, hairline, and hairstyle). Face specifications: eyes are almond-shaped, single dark outline, simple flat-color irises with one small highlight per eye, no extra pupils or eyelids; eyebrows a single clear stroke that matches natural thickness; nose is a minimal mark (tiny ‘L’ or dot) with no photoreal shading; mouth is small and tidy (single line with subtle fill, no overdrawn lips or teeth unless smiling). Ears align with eye level. Symmetrical features, no distortion. Mouth clarity: small, tidy, anime-style mouth with a single clean outline; subtle upward curve, no heavy lip definition. Closed mouth by default with a soft, flat fill 5–10% darker than skin; no gloss, no texture, no pores. If smiling/open: render as a simple bean shape with one interior shadow; teeth as a single white band, no individual tooth lines, no gum exposure, no tongue unless laughing (then tiny, rounded, single-color). Corners soft, centered on the facial midline, proportional to face (not wide). No double lines, smearing, or blur; edges crisp, anti-aliased. Keep shading to 2–3 cel tones only. Rendering: 2–3 tone cel shading (flat colors + soft bounce light), outer contour slightly thicker than interior lines, pastel palette, warm ambient light, very light blush on cheeks, no pores or photoreal textures. Background is soft, painterly, and low-detail. Composition: centered, chest-up portrait at a 3/4 angle. Face perfectly clean and symmetrical; flawless eyes; tidy line work on eyelids; accurate eye spacing; no artifacts or doubling. Avoid: melting or warped features, asymmetry, stretched faces, glassy/over-detailed eyes, heavy gradients, photoreal textures, extreme lens distortion. High quality, crisp, charming, expressive.",
       n: 1,
       size: "1024x1024",
     });
