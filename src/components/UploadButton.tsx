@@ -82,7 +82,6 @@ export default function UploadButton() {
       // Compress PNG to get under 4MB
       const options = {
         maxSizeMB: 3.8,
-        maxWidthOrHeight: 1024,
         useWebWorker: true,
         fileType: "image/png" as const,
       };

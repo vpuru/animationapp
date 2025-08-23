@@ -198,7 +198,7 @@ export const transformImageToGhibli = async (imageFile: Blob): Promise<string> =
     const inputFile = blobToFile(imageFile, "input.png");
 
     // Debug: Save input image for inspection
-    await saveDebugFile(inputFile, `debug-input-${Date.now()}.png`);
+    // await saveDebugFile(inputFile, `debug-input-${Date.now()}.png`);
 
     // Generate mask for editing - configurable strategy
     const maskStrategy = process.env.MASK_STRATEGY || "semi-transparent"; // Options: 'full-transparent', 'semi-transparent', 'center-preserving'
@@ -223,10 +223,10 @@ export const transformImageToGhibli = async (imageFile: Blob): Promise<string> =
     );
 
     // Debug: Save mask for inspection
-    await saveDebugFile(maskFile, `debug-mask-${Date.now()}.png`);
+    // await saveDebugFile(maskFile, `debug-mask-${Date.now()}.png`);
 
     console.log(
-      `[DEBUG] Calling OpenAI images.edit API with model: gpt-image-1, size: 1024x1024, response_format: b64_json`
+      `[DEBUG] Calling OpenAI images.edit API with model: gpt-image-1, size: auto, input dimensions: ${width}x${height}`
     );
 
     // Call Images Edit endpoint
@@ -237,7 +237,7 @@ export const transformImageToGhibli = async (imageFile: Blob): Promise<string> =
       prompt:
         "Convert the input photo into a Studio Ghibli–inspired, hand-drawn animation portrait with clean line art and soft cel shading. Preserve the person’s identity (same face shape, eye spacing and gaze, nose/mouth position, hairline, and hairstyle). Face specifications: eyes are almond-shaped, single dark outline, simple flat-color irises with one small highlight per eye, no extra pupils or eyelids; eyebrows a single clear stroke that matches natural thickness; nose is a minimal mark (tiny ‘L’ or dot) with no photoreal shading; mouth is small and tidy (single line with subtle fill, no overdrawn lips or teeth unless smiling). Ears align with eye level. Symmetrical features, no distortion. Mouth clarity: small, tidy, anime-style mouth with a single clean outline; subtle upward curve, no heavy lip definition. Closed mouth by default with a soft, flat fill 5–10% darker than skin; no gloss, no texture, no pores. If smiling/open: render as a simple bean shape with one interior shadow; teeth as a single white band, no individual tooth lines, no gum exposure, no tongue unless laughing (then tiny, rounded, single-color). Corners soft, centered on the facial midline, proportional to face (not wide). No double lines, smearing, or blur; edges crisp, anti-aliased. Keep shading to 2–3 cel tones only. Rendering: 2–3 tone cel shading (flat colors + soft bounce light), outer contour slightly thicker than interior lines, pastel palette, warm ambient light, very light blush on cheeks, no pores or photoreal textures. Background is soft, painterly, and low-detail. Composition: centered, chest-up portrait at a 3/4 angle. Face perfectly clean and symmetrical; flawless eyes; tidy line work on eyelids; accurate eye spacing; no artifacts or doubling. Avoid: melting or warped features, asymmetry, stretched faces, glassy/over-detailed eyes, heavy gradients, photoreal textures, extreme lens distortion. High quality, crisp, charming, expressive.",
       n: 1,
-      size: "1024x1024",
+      size: "auto",
     });
 
     console.log(
