@@ -30,6 +30,8 @@ export interface ImageState {
   output_bucket_id: string | null;
   preview_bucket_id: string | null;
   error_message: string | null;
+  user_id: string | null;
+  purchased: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -48,13 +50,14 @@ export const uploadToInputBucket = async (file: File, fileName: string) => {
   return data;
 };
 
-export const createImageState = async (uuid: string, inputBucketId: string) => {
+export const createImageState = async (uuid: string, inputBucketId: string, userId: string) => {
   // First, try to insert a new record
   const { data: insertData, error: insertError } = await supabaseAdmin
     .from("images_state")
     .insert({
       uuid,
       input_bucket_id: inputBucketId,
+      user_id: userId,
     })
     .select()
     .single();
@@ -84,7 +87,7 @@ export const createImageState = async (uuid: string, inputBucketId: string) => {
 
 export const updateImageState = async (
   uuid: string,
-  updates: Partial<Pick<ImageState, "output_bucket_id" | "preview_bucket_id" | "error_message">>
+  updates: Partial<Pick<ImageState, "output_bucket_id" | "preview_bucket_id" | "error_message" | "purchased">>
 ) => {
   const { data, error } = await supabaseAdmin
     .from("images_state")
@@ -163,6 +166,20 @@ export const getPreviewUrl = (uuid: string) => {
   const { data } = supabase.storage.from("preview_images").getPublicUrl(previewBucketId);
 
   return data.publicUrl;
+};
+
+export const getUserImages = async (userId: string): Promise<ImageState[]> => {
+  const { data, error } = await supabase
+    .from("images_state")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(`Failed to get user images: ${error.message}`);
+  }
+
+  return data as ImageState[];
 };
 
 // Validation helpers

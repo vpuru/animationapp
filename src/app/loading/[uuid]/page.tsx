@@ -7,6 +7,7 @@ import ProgressBar from "@/components/ProgressBar";
 import CyclingText from "@/components/CyclingText";
 import StarRating from "@/components/StarRating";
 import { getImageState, createImageState } from "@/services/supabase";
+import { ensureAnonymousUser } from "@/lib/auth";
 
 interface LoadingPageProps {
   params: Promise<{
@@ -33,7 +34,8 @@ export default function LoadingPage({ params }: LoadingPageProps) {
         if (!existingState) {
           // No database entry - this is first time, create entry and start processing
           console.log('No database entry found, creating new entry and starting processing');
-          await createImageState(uuid, `${uuid}.png`);
+          const userId = await ensureAnonymousUser();
+          await createImageState(uuid, `${uuid}.png`, userId);
           // Continue to processImage()
           return false; // Indicates we should proceed with processing
         }

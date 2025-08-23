@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getImageState } from '@/services/supabase'
+import { getImageState, updateImageState } from '@/services/supabase'
 import { supabase } from '@/services/supabase'
 
 export async function POST(
@@ -60,6 +60,9 @@ export async function POST(
         { status: 500 }
       )
     }
+
+    // Update purchase state in database
+    await updateImageState(uuid, { purchased: true });
 
     return NextResponse.json({
       success: true,
