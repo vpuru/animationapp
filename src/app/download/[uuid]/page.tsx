@@ -4,7 +4,8 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getImageState, getImageUrl } from "@/services/supabase";
 import type { ImageState } from "@/services/supabase";
-import { DownloadIcon, QualityIcon, ShareIcon, LinkIcon, UserIcon } from "@/components/icons";
+import { DownloadIcon, QualityIcon, ShareIcon, LinkIcon, UserIcon, GoogleIcon } from "@/components/icons";
+import { signInWithGoogle } from "@/lib/auth";
 
 interface DownloadPageProps {
   params: Promise<{
@@ -75,6 +76,24 @@ export default function DownloadPage({ params }: DownloadPageProps) {
 
   const handleHome = () => {
     router.push("/");
+  };
+
+  const handleSignIn = async () => {
+    try {
+      // Store return path for after auth
+      sessionStorage.setItem('authReturnTo', window.location.pathname);
+      
+      const { error } = await signInWithGoogle();
+      
+      if (error) {
+        console.error('Google sign-in error:', error);
+        setError('Failed to sign in with Google. Please try again.');
+      }
+      // OAuth flow will redirect to callback page
+    } catch (error) {
+      console.error('Sign-in error:', error);
+      setError('Failed to sign in with Google. Please try again.');
+    }
   };
 
   if (loading) {
@@ -175,11 +194,19 @@ export default function DownloadPage({ params }: DownloadPageProps) {
             </div>
 
             <button
+              onClick={handleSignIn}
+              className="w-full bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-6 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-200"
+            >
+              <GoogleIcon />
+              Sign in to save
+            </button>
+
+            <button
               onClick={handleHome}
               className="w-full bg-orange-500 hover:bg-orange-600 text-white px-6 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-200"
             >
               <UserIcon />
-              Create More Headshots
+              Create More Animations
             </button>
           </div>
         </div>

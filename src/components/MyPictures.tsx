@@ -3,25 +3,21 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { getCurrentUserId, ensureAnonymousUser } from "@/lib/auth";
+import { getCurrentUserId } from "@/lib/auth";
 import { getUserImages, getImageUrl } from "@/services/supabase";
 import type { ImageState } from "@/services/supabase";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface MyPicturesProps {
   images?: string[];
 }
 
-export default function MyPictures({
-  images = [
-    "/photos/chatgpt-image-1.png",
-    "/photos/chatgpt-image-2.png",
-    "/photos/chatgpt-image-3.png",
-  ],
-}: MyPicturesProps) {
+export default function MyPictures({}: MyPicturesProps) {
   const [userImages, setUserImages] = useState<ImageState[]>([]);
   const [imageCount, setImageCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     async function loadUserImages() {
@@ -73,7 +69,12 @@ export default function MyPictures({
       </div>
 
       {/* Title */}
-      <span className="text-gray-800 font-medium text-base">My Pictures</span>
+      <div className="flex flex-col">
+        <span className="text-gray-800 font-medium text-base">My Pictures</span>
+        {isAuthenticated && (
+          <span className="text-xs text-green-600">✓ Signed in</span>
+        )}
+      </div>
 
       {/* Image Bubbles */}
       <div className="flex -space-x-2">

@@ -2,15 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCurrentUserId } from '@/lib/auth';
+import { getCurrentUserId, signOut } from '@/lib/auth';
 import { getUserImages, getImageUrl } from '@/services/supabase';
 import type { ImageState } from '@/services/supabase';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function GalleryPage() {
   const [images, setImages] = useState<ImageState[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const { user, isAuthenticated } = useAuth();
 
   useEffect(() => {
     async function loadUserImages() {
@@ -58,8 +60,30 @@ export default function GalleryPage() {
               <path d="M9 22V12H15V22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
-          <h1 className="text-3xl font-bold text-gray-800">My Gallery</h1>
-          <div className="w-10"></div>
+          
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-gray-800">My Gallery</h1>
+            {isAuthenticated && user && (
+              <p className="text-sm text-gray-600 mt-1">
+                Signed in as {user.email}
+              </p>
+            )}
+          </div>
+          
+          {isAuthenticated ? (
+            <button
+              onClick={async () => {
+                await signOut();
+                router.push('/');
+              }}
+              className="px-4 py-2 text-sm bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-lg transition-colors shadow-sm"
+              title="Sign out"
+            >
+              Sign out
+            </button>
+          ) : (
+            <div className="w-10"></div>
+          )}
         </div>
         
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
