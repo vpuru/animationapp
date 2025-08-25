@@ -18,9 +18,22 @@ if (!supabaseAnonKey) {
 }
 
 // Client-side Supabase client (uses anon key, runs in browser)
-export const supabase = supabaseUrl && supabaseAnonKey 
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null;
+export function createSupabaseClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+}
+
+// Singleton instance for client-side usage  
+let _supabaseClient: ReturnType<typeof createSupabaseClient> | null = null;
+
+export function getSupabaseClient(): ReturnType<typeof createSupabaseClient> {
+  if (!_supabaseClient) {
+    _supabaseClient = createSupabaseClient();
+  }
+  return _supabaseClient!;
+}
 
 // Server-only admin client (only use in API routes)
 let _supabaseAdmin: ReturnType<typeof createClient> | null = null;
@@ -36,6 +49,7 @@ export const getSupabaseAdmin = () => {
       throw new Error('Service role key not available');
     }
     
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     if (!supabaseUrl) {
       throw new Error('Supabase URL not available');
     }
@@ -51,8 +65,6 @@ export const getSupabaseAdmin = () => {
   return _supabaseAdmin;
 };
 
-// Temporary backward compatibility - this will be removed
-export const supabaseAdmin = typeof window === 'undefined' ? getSupabaseAdmin() : null;
 
 // Types for our database tables
 export interface ImageState {
@@ -69,9 +81,7 @@ export interface ImageState {
 
 // Utility functions for common operations
 export const uploadToInputBucket = async (file: File, fileName: string) => {
-  if (!supabase) {
-    throw new Error('Supabase client not available');
-  }
+  const supabase = getSupabaseClient();
   
   const { data, error } = await supabase.storage.from("input_images").upload(fileName, file, {
     cacheControl: "3600",
@@ -86,9 +96,7 @@ export const uploadToInputBucket = async (file: File, fileName: string) => {
 };
 
 export const createImageState = async (uuid: string, inputBucketId: string, userId: string) => {
-  if (!supabase) {
-    throw new Error('Supabase client not available');
-  }
+  const supabase = getSupabaseClient();
   
   // First, try to insert a new record
   const { data: insertData, error: insertError } = await supabase
@@ -145,9 +153,7 @@ export const updateImageState = async (
 };
 
 export const getImageState = async (uuid: string) => {
-  if (!supabase) {
-    throw new Error('Supabase client not available');
-  }
+  const supabase = getSupabaseClient();
   
   const { data, error } = await supabase.from("images_state").select("*").eq("uuid", uuid).single();
 
@@ -206,9 +212,7 @@ export const uploadToPreviewBucket = async (fileName: string, file: Blob) => {
 };
 
 export const getPublicUrl = (uuid: string) => {
-  if (!supabase) {
-    throw new Error('Supabase client not available');
-  }
+  const supabase = getSupabaseClient();
   
   const outputBucketId = `${uuid}_ghibli.png`;
   const { data } = supabase.storage.from("output_images").getPublicUrl(outputBucketId);
@@ -217,9 +221,7 @@ export const getPublicUrl = (uuid: string) => {
 };
 
 export const getPreviewUrl = (uuid: string) => {
-  if (!supabase) {
-    throw new Error('Supabase client not available');
-  }
+  const supabase = getSupabaseClient();
   
   const previewBucketId = `${uuid}.png`;
   const { data } = supabase.storage.from("preview_images").getPublicUrl(previewBucketId);
@@ -228,9 +230,7 @@ export const getPreviewUrl = (uuid: string) => {
 };
 
 export const getImageUrl = (image: ImageState): string | null => {
-  if (!supabase) {
-    return null;
-  }
+  const supabase = getSupabaseClient();
   
   if (image.purchased && image.output_bucket_id) {
     const { data } = supabase.storage.from("output_images").getPublicUrl(image.output_bucket_id);
@@ -243,9 +243,7 @@ export const getImageUrl = (image: ImageState): string | null => {
 };
 
 export const getUserImages = async (userId: string): Promise<ImageState[]> => {
-  if (!supabase) {
-    throw new Error('Supabase client not available');
-  }
+  const supabase = getSupabaseClient();
   
   const { data, error } = await supabase
     .from("images_state")

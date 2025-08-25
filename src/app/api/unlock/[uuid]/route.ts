@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getImageState, updateImageState } from '@/services/supabase'
-import { supabase } from '@/services/supabase'
+import { getSupabaseClient } from '@/services/supabase'
 
 export async function POST(
   request: NextRequest,
@@ -34,6 +34,7 @@ export async function POST(
     }
 
     // Generate public URL for the full resolution image
+    const supabase = getSupabaseClient();
     const { data } = supabase.storage
       .from("output_images")
       .getPublicUrl(imageState.output_bucket_id)

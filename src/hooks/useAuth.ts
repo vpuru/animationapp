@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/services/supabase";
+import { getSupabaseClient } from "@/services/supabase";
 import type { User, Subscription } from "@supabase/supabase-js";
 
 interface UseAuthReturn {
@@ -76,16 +76,8 @@ export function useAuth(): UseAuthReturn {
 
     const initAuth = async () => {
       try {
-        // Check if supabase client is available
-        if (!supabase) {
-          if (mounted) {
-            setLoading(false);
-            setUser(null);
-          }
-          return;
-        }
-
         // Get initial session with timeout
+        const supabase = getSupabaseClient();
         const { data: { session }, error } = await supabase.auth.getSession();
 
         if (error) {
@@ -141,9 +133,7 @@ export function useAuth(): UseAuthReturn {
 
   // Auth actions
   const signInWithGoogle = async () => {
-    if (!supabase) {
-      throw new Error("Supabase client not available");
-    }
+    const supabase = getSupabaseClient();
 
     // Store current anonymous user ID for potential migration
     const currentUser = user;
@@ -160,9 +150,7 @@ export function useAuth(): UseAuthReturn {
   };
 
   const signOut = async () => {
-    if (!supabase) {
-      throw new Error("Supabase client not available");
-    }
+    const supabase = getSupabaseClient();
 
     // Clear any pending migration data
     localStorage.removeItem("pendingMigration");
@@ -174,10 +162,7 @@ export function useAuth(): UseAuthReturn {
       return user.id;
     }
 
-    if (!supabase) {
-      throw new Error("Supabase client not available");
-    }
-
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase.auth.signInAnonymously();
 
     if (error) {
@@ -197,10 +182,7 @@ export function useAuth(): UseAuthReturn {
       return user;
     }
 
-    if (!supabase) {
-      return null;
-    }
-
+    const supabase = getSupabaseClient();
     const {
       data: { user: freshUser },
     } = await supabase.auth.getUser();
@@ -213,10 +195,7 @@ export function useAuth(): UseAuthReturn {
       return user.id;
     }
 
-    if (!supabase) {
-      return null;
-    }
-
+    const supabase = getSupabaseClient();
     const {
       data: { user: freshUser },
     } = await supabase.auth.getUser();
