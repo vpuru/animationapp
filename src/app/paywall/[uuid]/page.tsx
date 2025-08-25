@@ -79,9 +79,9 @@ export default function PaywallPage({ params }: PaywallPageProps) {
 
       const result = await response.json();
 
-      if (result.success && result.fullImageUrl) {
-        // Redirect to the full resolution image
-        window.open(result.fullImageUrl, "_blank");
+      if (result.success) {
+        // Redirect to the download page
+        router.push(`/download/${uuid}`);
       } else {
         throw new Error(result.error || "Unlock failed");
       }

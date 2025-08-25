@@ -18,31 +18,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Get initial session
-    const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-      setLoading(false);
-    };
-
-    getInitialSession();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setUser(session?.user ?? null);
-        setLoading(false);
-
-        // Handle data migration for newly authenticated users
-        if (event === 'SIGNED_IN' && session?.user && !session.user.is_anonymous) {
-          await handleAuthStateChange();
+  // Initialize auth state immediately and set up listener
+  React.useLayoutEffect(() => {
+    let mounted = true;
+    
+    const initAuth = async () => {
+      try {
+        // Get initial session
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (mounted) {
+          setUser(session?.user ?? null);
+          setLoading(false);
+        }
+        
+        // Set up auth state listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            if (mounted) {
+              setUser(session?.user ?? null);
+              setLoading(false);
+              
+              // Handle data migration for newly authenticated users
+              if (event === 'SIGNED_IN' && session?.user && !session.user.is_anonymous) {
+                await handleAuthStateChange();
+              }
+            }
+          }
+        );
+        
+        return () => {
+          subscription.unsubscribe();
+        };
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        if (mounted) {
+          setLoading(false);
+          setUser(null);
         }
       }
-    );
-
+    };
+    
+    const cleanup = initAuth();
+    
     return () => {
-      subscription.unsubscribe();
+      mounted = false;
+      cleanup.then(fn => fn?.());
     };
   }, []);
 

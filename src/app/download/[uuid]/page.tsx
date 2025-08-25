@@ -6,6 +6,7 @@ import { getImageState, getImageUrl } from "@/services/supabase";
 import type { ImageState } from "@/services/supabase";
 import { DownloadIcon, QualityIcon, ShareIcon, LinkIcon, UserIcon, GoogleIcon } from "@/components/icons";
 import { signInWithGoogle } from "@/lib/auth";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface DownloadPageProps {
   params: Promise<{
@@ -20,6 +21,7 @@ export default function DownloadPage({ params }: DownloadPageProps) {
   const [copied, setCopied] = useState(false);
   const router = useRouter();
   const { uuid } = React.use(params);
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     async function loadImage() {
@@ -175,6 +177,19 @@ export default function DownloadPage({ params }: DownloadPageProps) {
 
           {/* Download and Copy Link buttons */}
           <div className="space-y-3">
+            {!isAuthenticated && (
+              <button
+                onClick={handleSignIn}
+                className="w-full bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-6 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-200"
+              >
+                <GoogleIcon />
+                <div className="flex flex-col items-start">
+                  <span>Sign in</span>
+                  <span className="text-xs text-gray-500 font-normal">sign in to save</span>
+                </div>
+              </button>
+            )}
+
             <div className="flex gap-3">
               <button
                 onClick={handleDownload}
@@ -192,14 +207,6 @@ export default function DownloadPage({ params }: DownloadPageProps) {
                 {copied ? "Link Copied!" : "Copy Link"}
               </button>
             </div>
-
-            <button
-              onClick={handleSignIn}
-              className="w-full bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-6 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-200"
-            >
-              <GoogleIcon />
-              Sign in to save
-            </button>
 
             <button
               onClick={handleHome}

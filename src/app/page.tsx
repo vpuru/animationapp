@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import InfiniteSlider from "@/components/InfiniteSlider";
 import UploadButton from "@/components/UploadButton";
 import AnimatedWaveText from "@/components/AnimatedWaveText";
@@ -8,11 +7,11 @@ import MyPictures from "@/components/MyPictures";
 import StatsCard from "@/components/StatsCard";
 import TestimonialCard, { TestimonialCardProps } from "@/components/TestimonialCard";
 import testimonialsData from "@/data/testimonials.json";
-import { getCurrentUserId } from "@/lib/auth";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Home() {
-  const [isSignedIn, setIsSignedIn] = useState<boolean | null>(null);
-  
+  const { isAuthenticated, loading } = useAuth();
+
   const mockHeadshots = [
     "/photos/chatgpt-image-1.png",
     "/photos/chatgpt-image-2.png",
@@ -20,23 +19,14 @@ export default function Home() {
     "/photos/chatgpt-image-4.png",
   ];
 
-  useEffect(() => {
-    async function checkAuth() {
-      const userId = await getCurrentUserId();
-      setIsSignedIn(!!userId);
-    }
-    
-    checkAuth();
-  }, []);
-
   return (
     <div className="text-gray-900 overflow-x-hidden">
       <div className="container mx-auto px-4 pt-8 pb-8 flex flex-col items-center">
         <div className="mb-4">
-          {isSignedIn === null ? (
+          {loading ? (
             // Loading skeleton
             <div className="w-64 h-12 bg-gray-200 animate-pulse rounded-full"></div>
-          ) : isSignedIn ? (
+          ) : isAuthenticated ? (
             <MyPictures />
           ) : (
             <StatsCard />
