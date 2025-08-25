@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/services/supabase';
+import { getSupabaseAdmin } from '@/services/supabase';
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,6 +18,38 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const supabaseAdmin = getSupabaseAdmin();
+
+    // Safety check: Verify users using auth.identities table
+    // Anonymous users typically have no identities, authenticated users have provider identities
+    try {
+      const { data: fromIdentities } = await supabaseAdmin
+        .from('auth.identities')
+        .select('provider')
+        .eq('user_id', fromUserId);
+
+      const { data: toIdentities } = await supabaseAdmin
+        .from('auth.identities')
+        .select('provider')
+        .eq('user_id', toUserId);
+
+      // Anonymous users should have no identities
+      if (fromIdentities && fromIdentities.length > 0) {
+        console.warn(`Warning: fromUserId ${fromUserId} has ${fromIdentities.length} identities, expected 0 for anonymous user`);
+      }
+
+      // Authenticated users should have at least one identity (like google, etc.)
+      if (!toIdentities || toIdentities.length === 0) {
+        console.warn(`Warning: toUserId ${toUserId} has no identities, expected at least 1 for authenticated user`);
+      } else {
+        console.log(`Target user ${toUserId} has ${toIdentities.length} identity(ies): ${toIdentities.map(i => i.provider).join(', ')}`);
+      }
+    } catch (error) {
+      console.warn('Could not verify user types via identities table:', error);
+    }
+
+    console.log(`Migration verified: from anonymous user ${fromUserId} to authenticated user ${toUserId}`);
 
     // Migrate all images_state records from anonymous user to authenticated user
     const { error } = await supabaseAdmin

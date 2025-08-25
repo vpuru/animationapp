@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase, supabaseAdmin } from "@/services/supabase";
+import { supabase } from "@/services/supabase";
 import type { User, Subscription } from "@supabase/supabase-js";
 
 interface UseAuthReturn {
@@ -50,17 +50,24 @@ export function useAuth(): UseAuthReturn {
 
     const migrateAnonymousData = async (fromUserId: string, toUserId: string): Promise<void> => {
       try {
-        // Update all images_state records to transfer ownership from anonymous to authenticated user
-        const { error } = await supabaseAdmin
-          .from("images_state")
-          .update({ user_id: toUserId })
-          .eq("user_id", fromUserId);
+        const response = await fetch('/api/migrate-data', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            fromUserId,
+            toUserId
+          }),
+        });
 
-        if (error) {
-          throw new Error(`Failed to migrate user data: ${error.message}`);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || `Migration failed with status: ${response.status}`);
         }
 
-        console.log(`Successfully migrated data from ${fromUserId} to ${toUserId}`);
+        const result = await response.json();
+        console.log(result.message);
       } catch (error) {
         console.error("Migration failed:", error);
         throw error;

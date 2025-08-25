@@ -141,7 +141,7 @@ export const updateImageState = async (
     throw new Error(`Failed to update image state: ${error.message}`);
   }
 
-  return data as ImageState;
+  return data as unknown as ImageState;
 };
 
 export const getImageState = async (uuid: string) => {
