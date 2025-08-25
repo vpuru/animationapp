@@ -12,7 +12,7 @@ export interface TestimonialCardProps {
 export default function TestimonialCard({
   testimonial = "I was pretty skeptical, but this sticker turned out super cute! I use it as my FaceBook profile pic and friends keep asking where I made",
   userName = "Maria C.",
-  userImage = "/photos/ChatGPT Image Aug 20, 2025, 10_34_17 AM.png",
+  userImage = "asset_images/chatgpt-image-1.png",
   rating = 5,
 }: TestimonialCardProps) {
   return (

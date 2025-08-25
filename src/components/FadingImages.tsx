@@ -4,10 +4,10 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 
 const images = [
-  "/photos/chatgpt-image-1.png",
-  "/photos/chatgpt-image-2.png", 
-  "/photos/chatgpt-image-3.png",
-  "/photos/chatgpt-image-4.png",
+  "asset_images/chatgpt-image-1.png",
+  "asset_images/chatgpt-image-2.png", 
+  "asset_images/chatgpt-image-3.png",
+  "asset_images/chatgpt-image-4.png",
 ];
 
 export default function FadingImages() {
