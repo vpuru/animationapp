@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { supabase, supabaseAdmin } from '@/services/supabase';
-import type { User } from '@supabase/supabase-js';
+import { useState, useEffect } from "react";
+import { supabase, supabaseAdmin } from "@/services/supabase";
+import type { User, Subscription } from "@supabase/supabase-js";
 
 interface UseAuthReturn {
   // State
@@ -10,7 +10,7 @@ interface UseAuthReturn {
   loading: boolean;
   isAuthenticated: boolean;
   isAnonymous: boolean;
-  
+
   // Actions
   signInWithGoogle: () => Promise<{ data: unknown; error: Error | null }>;
   signOut: () => Promise<{ error: Error | null }>;
@@ -26,7 +26,8 @@ export function useAuth(): UseAuthReturn {
   // Initialize auth state and set up listener
   useEffect(() => {
     let mounted = true;
-    
+    let authSubscription: Subscription | null = null;
+
     const handleAuthStateChange = async (authenticatedUser: User): Promise<void> => {
       if (authenticatedUser && !authenticatedUser.is_anonymous) {
         // Check if we have a pending migration
@@ -65,54 +66,78 @@ export function useAuth(): UseAuthReturn {
         throw error;
       }
     };
-    
+
     const initAuth = async () => {
       try {
-        // Get initial session
-        const { data: { session } } = await supabase.auth.getSession();
-        
+        // Check if supabase client is available
+        if (!supabase) {
+          if (mounted) {
+            setLoading(false);
+            setUser(null);
+          }
+          return;
+        }
+
+        // Get initial session with timeout
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        if (error) {
+          console.error("Supabase auth session error:", error);
+          throw error;
+        }
+
         if (mounted) {
           setUser(session?.user ?? null);
           setLoading(false);
         }
-        
+
         // Set up auth state listener
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, session) => {
-            if (mounted) {
-              setUser(session?.user ?? null);
-              setLoading(false);
-              
-              // Handle data migration for newly authenticated users
-              if (event === 'SIGNED_IN' && session?.user && !session.user.is_anonymous) {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+          if (mounted) {
+            setUser(session?.user ?? null);
+            setLoading(false);
+
+            // Handle data migration for newly authenticated users
+            if (event === "SIGNED_IN" && session?.user && !session.user.is_anonymous) {
+              try {
                 await handleAuthStateChange(session.user);
+              } catch (migrationError) {
+                console.error("Migration error during auth state change:", migrationError);
+                // Don't throw - migration failure shouldn't break auth
               }
             }
           }
-        );
-        
-        return () => {
-          subscription.unsubscribe();
-        };
+        });
+
+        authSubscription = subscription;
       } catch (error) {
-        console.error('Auth initialization error:', error);
+        console.error("Auth initialization error:", error);
+        // Always ensure loading is set to false even on failure
         if (mounted) {
           setLoading(false);
           setUser(null);
         }
+        // Don't re-throw - we want the component to render in a "no user" state
       }
     };
-    
-    const cleanup = initAuth();
-    
+
+    // Execute async initialization
+    initAuth();
+
     return () => {
       mounted = false;
-      cleanup.then(fn => fn?.());
+      if (authSubscription) {
+        authSubscription.unsubscribe();
+      }
     };
   }, []);
 
   // Auth actions
   const signInWithGoogle = async () => {
+    if (!supabase) {
+      throw new Error("Supabase client not available");
+    }
+
     // Store current anonymous user ID for potential migration
     const currentUser = user;
     if (currentUser && currentUser.is_anonymous) {
@@ -128,6 +153,10 @@ export function useAuth(): UseAuthReturn {
   };
 
   const signOut = async () => {
+    if (!supabase) {
+      throw new Error("Supabase client not available");
+    }
+
     // Clear any pending migration data
     localStorage.removeItem("pendingMigration");
     return await supabase.auth.signOut();
@@ -136,6 +165,10 @@ export function useAuth(): UseAuthReturn {
   const ensureAnonymousUser = async (): Promise<string> => {
     if (user) {
       return user.id;
+    }
+
+    if (!supabase) {
+      throw new Error("Supabase client not available");
     }
 
     const { data, error } = await supabase.auth.signInAnonymously();
@@ -156,8 +189,14 @@ export function useAuth(): UseAuthReturn {
     if (user) {
       return user;
     }
-    
-    const { data: { user: freshUser } } = await supabase.auth.getUser();
+
+    if (!supabase) {
+      return null;
+    }
+
+    const {
+      data: { user: freshUser },
+    } = await supabase.auth.getUser();
     return freshUser;
   };
 
@@ -166,11 +205,16 @@ export function useAuth(): UseAuthReturn {
     if (user) {
       return user.id;
     }
-    
-    const { data: { user: freshUser } } = await supabase.auth.getUser();
+
+    if (!supabase) {
+      return null;
+    }
+
+    const {
+      data: { user: freshUser },
+    } = await supabase.auth.getUser();
     return freshUser?.id || null;
   };
-
 
   return {
     // State
@@ -178,7 +222,7 @@ export function useAuth(): UseAuthReturn {
     loading,
     isAuthenticated: !!user && !user.is_anonymous,
     isAnonymous: !!user?.is_anonymous,
-    
+
     // Actions
     signInWithGoogle,
     signOut,

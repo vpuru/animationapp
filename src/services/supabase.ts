@@ -1,27 +1,58 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabaseServiceRoleKey = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl) {
-  throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL environment variable");
+  if (typeof window === 'undefined') {
+    // Only throw on server-side, not client-side
+    throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL environment variable");
+  }
 }
 
 if (!supabaseAnonKey) {
-  throw new Error("Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable");
+  if (typeof window === 'undefined') {
+    // Only throw on server-side, not client-side
+    throw new Error("Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable");
+  }
 }
 
 // Client-side Supabase client (uses anon key, runs in browser)
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = supabaseUrl && supabaseAnonKey 
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
 
-// Server-side Supabase client (uses service role key, bypasses RLS)
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false,
-  },
-});
+// Server-only admin client (only use in API routes)
+let _supabaseAdmin: ReturnType<typeof createClient> | null = null;
+
+export const getSupabaseAdmin = () => {
+  if (typeof window !== 'undefined') {
+    throw new Error('Admin client should not be used on the client side');
+  }
+  
+  if (!_supabaseAdmin) {
+    const serviceRoleKey = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceRoleKey) {
+      throw new Error('Service role key not available');
+    }
+    
+    if (!supabaseUrl) {
+      throw new Error('Supabase URL not available');
+    }
+    
+    _supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
+  }
+  
+  return _supabaseAdmin;
+};
+
+// Temporary backward compatibility - this will be removed
+export const supabaseAdmin = typeof window === 'undefined' ? getSupabaseAdmin() : null;
 
 // Types for our database tables
 export interface ImageState {
@@ -38,6 +69,10 @@ export interface ImageState {
 
 // Utility functions for common operations
 export const uploadToInputBucket = async (file: File, fileName: string) => {
+  if (!supabase) {
+    throw new Error('Supabase client not available');
+  }
+  
   const { data, error } = await supabase.storage.from("input_images").upload(fileName, file, {
     cacheControl: "3600",
     upsert: false,
@@ -51,8 +86,12 @@ export const uploadToInputBucket = async (file: File, fileName: string) => {
 };
 
 export const createImageState = async (uuid: string, inputBucketId: string, userId: string) => {
+  if (!supabase) {
+    throw new Error('Supabase client not available');
+  }
+  
   // First, try to insert a new record
-  const { data: insertData, error: insertError } = await supabaseAdmin
+  const { data: insertData, error: insertError } = await supabase
     .from("images_state")
     .insert({
       uuid,
@@ -89,7 +128,9 @@ export const updateImageState = async (
   uuid: string,
   updates: Partial<Pick<ImageState, "output_bucket_id" | "preview_bucket_id" | "error_message" | "purchased">>
 ) => {
-  const { data, error } = await supabaseAdmin
+  const admin = getSupabaseAdmin();
+  
+  const { data, error } = await admin
     .from("images_state")
     .update(updates)
     .eq("uuid", uuid)
@@ -104,6 +145,10 @@ export const updateImageState = async (
 };
 
 export const getImageState = async (uuid: string) => {
+  if (!supabase) {
+    throw new Error('Supabase client not available');
+  }
+  
   const { data, error } = await supabase.from("images_state").select("*").eq("uuid", uuid).single();
 
   if (error) {
@@ -117,7 +162,9 @@ export const getImageState = async (uuid: string) => {
 };
 
 export const downloadFromInputBucket = async (fileName: string) => {
-  const { data, error } = await supabaseAdmin.storage.from("input_images").download(fileName);
+  const admin = getSupabaseAdmin();
+  
+  const { data, error } = await admin.storage.from("input_images").download(fileName);
 
   if (error) {
     throw new Error(`Download failed: ${error.message}`);
@@ -127,7 +174,9 @@ export const downloadFromInputBucket = async (fileName: string) => {
 };
 
 export const uploadToOutputBucket = async (fileName: string, file: Blob) => {
-  const { data, error } = await supabaseAdmin.storage.from("output_images").upload(fileName, file, {
+  const admin = getSupabaseAdmin();
+  
+  const { data, error } = await admin.storage.from("output_images").upload(fileName, file, {
     cacheControl: "3600",
     upsert: false,
   });
@@ -140,7 +189,9 @@ export const uploadToOutputBucket = async (fileName: string, file: Blob) => {
 };
 
 export const uploadToPreviewBucket = async (fileName: string, file: Blob) => {
-  const { data, error } = await supabaseAdmin.storage
+  const admin = getSupabaseAdmin();
+  
+  const { data, error } = await admin.storage
     .from("preview_images")
     .upload(fileName, file, {
       cacheControl: "3600",
@@ -155,6 +206,10 @@ export const uploadToPreviewBucket = async (fileName: string, file: Blob) => {
 };
 
 export const getPublicUrl = (uuid: string) => {
+  if (!supabase) {
+    throw new Error('Supabase client not available');
+  }
+  
   const outputBucketId = `${uuid}_ghibli.png`;
   const { data } = supabase.storage.from("output_images").getPublicUrl(outputBucketId);
 
@@ -162,6 +217,10 @@ export const getPublicUrl = (uuid: string) => {
 };
 
 export const getPreviewUrl = (uuid: string) => {
+  if (!supabase) {
+    throw new Error('Supabase client not available');
+  }
+  
   const previewBucketId = `${uuid}.png`;
   const { data } = supabase.storage.from("preview_images").getPublicUrl(previewBucketId);
 
@@ -169,6 +228,10 @@ export const getPreviewUrl = (uuid: string) => {
 };
 
 export const getImageUrl = (image: ImageState): string | null => {
+  if (!supabase) {
+    return null;
+  }
+  
   if (image.purchased && image.output_bucket_id) {
     const { data } = supabase.storage.from("output_images").getPublicUrl(image.output_bucket_id);
     return data.publicUrl;
@@ -180,6 +243,10 @@ export const getImageUrl = (image: ImageState): string | null => {
 };
 
 export const getUserImages = async (userId: string): Promise<ImageState[]> => {
+  if (!supabase) {
+    throw new Error('Supabase client not available');
+  }
+  
   const { data, error } = await supabase
     .from("images_state")
     .select("*")
