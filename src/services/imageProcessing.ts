@@ -68,7 +68,7 @@ export const addPadlockOverlay = async (imageBlob: Blob): Promise<Blob> => {
       .toBuffer();
     
     // Convert buffer back to blob
-    return new Blob([result], { type: 'image/png' });
+    return new Blob([new Uint8Array(result)], { type: 'image/png' });
     
   } catch (error) {
     console.error('Sharp image processing error:', error);

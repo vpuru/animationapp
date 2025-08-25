@@ -1,4 +1,4 @@
-import { Shield, Lock } from "lucide-react";
+import { Lock } from "lucide-react";
 
 export default function PaywallSecurity() {
   return (

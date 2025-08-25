@@ -38,6 +38,7 @@ const blobToFile = (blob: Blob, filename: string): File => {
 };
 
 // Debug: Save files for inspection (only in development)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const saveDebugFile = async (file: File, debugFilename: string): Promise<void> => {
   if (process.env.NODE_ENV !== "development") return;
 

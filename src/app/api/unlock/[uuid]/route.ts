@@ -55,7 +55,7 @@ export async function POST(
           { status: 404 }
         )
       }
-    } catch (fetchError) {
+    } catch {
       return NextResponse.json(
         { success: false, error: 'Unable to access full resolution image' },
         { status: 500 }
