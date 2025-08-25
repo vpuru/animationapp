@@ -7,10 +7,10 @@ import MyPictures from "@/components/MyPictures";
 import StatsCard from "@/components/StatsCard";
 import TestimonialCard, { TestimonialCardProps } from "@/components/TestimonialCard";
 import testimonialsData from "@/data/testimonials.json";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Home() {
-  const { isAuthenticated, loading } = useAuth();
+  const { loading, user } = useAuth();
 
   const mockHeadshots = [
     "/photos/chatgpt-image-1.png",
@@ -26,9 +26,11 @@ export default function Home() {
           {loading ? (
             // Loading skeleton
             <div className="w-64 h-12 bg-gray-200 animate-pulse rounded-full"></div>
-          ) : isAuthenticated ? (
+          ) : user ? (
+            // Show MyPictures for any user (authenticated OR anonymous)
             <MyPictures />
           ) : (
+            // Only show StatsCard when no user session at all
             <StatsCard />
           )}
         </div>

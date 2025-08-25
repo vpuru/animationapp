@@ -7,7 +7,7 @@ import ProgressBar from "@/components/ProgressBar";
 import CyclingText from "@/components/CyclingText";
 import StarRating from "@/components/StarRating";
 import { getImageState, createImageState } from "@/services/supabase";
-import { ensureAnonymousUser } from "@/lib/auth";
+import { useAuth } from "@/hooks/useAuth";
 
 interface LoadingPageProps {
   params: Promise<{
@@ -20,6 +20,7 @@ export default function LoadingPage({ params }: LoadingPageProps) {
   const [processingStage, setProcessingStage] = useState("Initializing...");
   const router = useRouter();
   const { uuid } = use(params);
+  const { ensureAnonymousUser } = useAuth();
 
   useEffect(() => {
     if (!uuid) {

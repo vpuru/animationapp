@@ -3,10 +3,9 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { getCurrentUserId } from "@/lib/auth";
 import { getUserImages, getImageUrl } from "@/services/supabase";
 import type { ImageState } from "@/services/supabase";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 
 interface MyPicturesProps {
   images?: string[];
@@ -17,7 +16,7 @@ export default function MyPictures({}: MyPicturesProps) {
   const [imageCount, setImageCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, getCurrentUserId } = useAuth();
 
   useEffect(() => {
     async function loadUserImages() {
@@ -42,7 +41,7 @@ export default function MyPictures({}: MyPicturesProps) {
     router.push("/gallery");
   };
 
-  const displayImages = userImages.map(getImageUrl).filter(Boolean);
+  const displayImages = userImages.map(getImageUrl).filter((url): url is string => Boolean(url));
 
   return (
     <div

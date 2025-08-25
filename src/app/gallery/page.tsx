@@ -2,17 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCurrentUserId, signOut } from '@/lib/auth';
 import { getUserImages, getImageUrl } from '@/services/supabase';
 import type { ImageState } from '@/services/supabase';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function GalleryPage() {
   const [images, setImages] = useState<ImageState[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, getCurrentUserId, signOut } = useAuth();
 
   useEffect(() => {
     async function loadUserImages() {

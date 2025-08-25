@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import { getImageState, getImageUrl } from "@/services/supabase";
 import type { ImageState } from "@/services/supabase";
 import { DownloadIcon, QualityIcon, ShareIcon, LinkIcon, UserIcon, GoogleIcon } from "@/components/icons";
-import { signInWithGoogle } from "@/lib/auth";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 
 interface DownloadPageProps {
   params: Promise<{
@@ -21,7 +20,7 @@ export default function DownloadPage({ params }: DownloadPageProps) {
   const [copied, setCopied] = useState(false);
   const router = useRouter();
   const { uuid } = React.use(params);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, signInWithGoogle } = useAuth();
 
   useEffect(() => {
     async function loadImage() {
