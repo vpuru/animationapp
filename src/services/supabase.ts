@@ -242,6 +242,21 @@ export const getImageUrl = (image: ImageState): string | null => {
   return null;
 };
 
+export const getImageDownloadUrl = (image: ImageState): string | null => {
+  const supabase = getSupabaseClient();
+  
+  if (image.purchased && image.output_bucket_id) {
+    // Return full Supabase URL for purchased output image download
+    const { data } = supabase.storage.from("output_images").getPublicUrl(image.output_bucket_id);
+    return data.publicUrl;
+  } else if (image.preview_bucket_id) {
+    // Return full Supabase URL for preview image download
+    const { data } = supabase.storage.from("preview_images").getPublicUrl(image.preview_bucket_id);
+    return data.publicUrl;
+  }
+  return null;
+};
+
 export const getUserImages = async (userId: string): Promise<ImageState[]> => {
   const supabase = getSupabaseClient();
   

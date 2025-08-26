@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { getImageState, getImageUrl } from "@/services/supabase";
+import { getImageState, getImageUrl, getImageDownloadUrl } from "@/services/supabase";
 import type { ImageState } from "@/services/supabase";
 import {
   DownloadIcon,
@@ -73,7 +73,7 @@ export default function DownloadPage({ params }: DownloadPageProps) {
 
   const handleDownload = () => {
     if (!image) return;
-    const imageUrl = getImageUrl(image);
+    const imageUrl = getImageDownloadUrl(image);
     if (imageUrl) {
       window.open(imageUrl, "_blank");
     }
@@ -81,7 +81,7 @@ export default function DownloadPage({ params }: DownloadPageProps) {
 
   const handleCopyLink = async () => {
     if (!image) return;
-    const imageUrl = getImageUrl(image);
+    const imageUrl = getImageDownloadUrl(image);
     if (imageUrl) {
       try {
         await navigator.clipboard.writeText(imageUrl);
