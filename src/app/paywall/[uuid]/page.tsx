@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
-import { getPreviewUrl, getImageState } from "@/services/supabase";
+import { getPreviewUrl, getImageState, getImageUrl } from "@/services/supabase";
 import {
   PaywallHero,
   PaywallFeatures,
@@ -19,7 +19,6 @@ interface PaywallPageProps {
 export default function PaywallPage({ params }: PaywallPageProps) {
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [isUnlocking, setIsUnlocking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { uuid } = use(params);
@@ -46,8 +45,14 @@ export default function PaywallPage({ params }: PaywallPageProps) {
           return;
         }
 
-        // Get preview image URL and set it directly
-        const previewUrl = getPreviewUrl(uuid);
+        // Get preview image URL using the same method as gallery
+        const previewUrl = getImageUrl(imageState);
+        
+        if (!previewUrl) {
+          setError("Preview image URL could not be generated");
+          return;
+        }
+        
         setPreviewImageUrl(previewUrl);
       } catch (err) {
         console.error("Error checking image:", err);
@@ -58,40 +63,7 @@ export default function PaywallPage({ params }: PaywallPageProps) {
     checkImageExists();
   }, [uuid, router]);
 
-  const handleUnlock = async () => {
-    if (isUnlocking) return;
-
-    setIsUnlocking(true);
-    setError(null);
-
-    try {
-      const response = await fetch(`/api/unlock/${uuid}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.error || "Failed to unlock image");
-      }
-
-      const result = await response.json();
-
-      if (result.success) {
-        // Redirect to the download page
-        router.push(`/download/${uuid}`);
-      } else {
-        throw new Error(result.error || "Unlock failed");
-      }
-    } catch (err) {
-      console.error("Unlock error:", err);
-      setError(err instanceof Error ? err.message : "Failed to unlock image");
-    } finally {
-      setIsUnlocking(false);
-    }
-  };
+  // Removed handleUnlock function - now handled by Stripe payment flow
 
   if (error) {
     return (
@@ -140,7 +112,7 @@ export default function PaywallPage({ params }: PaywallPageProps) {
           <PaywallFeatures />
 
           {/* Pricing and Payment */}
-          <PaywallPricing onUnlock={handleUnlock} isUnlocking={isUnlocking} />
+          <PaywallPricing uuid={uuid} />
 
           {/* Security Badges */}
           <PaywallSecurity />

@@ -1,15 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CreditCard } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { StripeProvider, PaymentForm } from "@/components/stripe";
 
 interface PaywallPricingProps {
-  onUnlock: () => void;
-  isUnlocking: boolean;
+  uuid: string;
 }
 
-export default function PaywallPricing({ onUnlock, isUnlocking }: PaywallPricingProps) {
+export default function PaywallPricing({ uuid }: PaywallPricingProps) {
   const [timeLeft, setTimeLeft] = useState({ minutes: 4, seconds: 49 });
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const { getCurrentUserId } = useAuth();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -31,6 +36,77 @@ export default function PaywallPricing({ onUnlock, isUnlocking }: PaywallPricing
   }, []);
 
   const formatTime = (num: number) => num.toString().padStart(2, '0');
+
+  const createPaymentIntent = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const userId = await getCurrentUserId();
+      
+      const response = await fetch('/api/create-payment-intent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          uuid: uuid,
+          userId: userId,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || 'Failed to create payment intent');
+      }
+
+      const { clientSecret: secret } = await response.json();
+      setClientSecret(secret);
+      setShowPaymentForm(true);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to initialize payment';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePaymentError = (errorMessage: string) => {
+    setError(errorMessage);
+    setShowPaymentForm(false);
+    setClientSecret(null);
+  };
+
+  if (showPaymentForm && clientSecret) {
+    return (
+      <div className="space-y-6">
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+            <p className="text-red-600 text-sm">{error}</p>
+          </div>
+        )}
+
+        <StripeProvider clientSecret={clientSecret}>
+          <PaymentForm
+            clientSecret={clientSecret}
+            uuid={uuid}
+            onError={handlePaymentError}
+          />
+        </StripeProvider>
+
+        <button
+          onClick={() => {
+            setShowPaymentForm(false);
+            setClientSecret(null);
+            setError(null);
+          }}
+          className="w-full text-gray-500 text-sm hover:text-gray-700 transition-colors"
+        >
+          ← Back to payment options
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -63,19 +139,25 @@ export default function PaywallPricing({ onUnlock, isUnlocking }: PaywallPricing
         </div>
       </div>
 
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
+          <p className="text-red-600 text-sm">{error}</p>
+        </div>
+      )}
+
       {/* Payment Buttons */}
       <div className="space-y-3">
-        {/* Apple Pay Button */}
+        {/* Apple Pay Button - Future implementation */}
         <button
-          onClick={onUnlock}
-          disabled={isUnlocking}
+          onClick={createPaymentIntent}
+          disabled={isLoading}
           className={`w-full py-4 rounded-lg font-semibold text-white transition-all duration-200 ${
-            isUnlocking
+            isLoading
               ? 'bg-gray-400 cursor-not-allowed'
               : 'bg-black hover:bg-gray-800'
           }`}
         >
-          {isUnlocking ? (
+          {isLoading ? (
             <div className="flex items-center justify-center space-x-2">
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
               <span>Processing...</span>
@@ -90,15 +172,14 @@ export default function PaywallPricing({ onUnlock, isUnlocking }: PaywallPricing
 
         {/* Card Payment Button */}
         <button
-          onClick={onUnlock}
-          disabled={isUnlocking}
+          onClick={createPaymentIntent}
+          disabled={isLoading}
           className={`w-full py-4 rounded-lg font-semibold text-white transition-all duration-200 flex items-center justify-center space-x-2 ${
-            isUnlocking
+            isLoading
               ? 'bg-gray-400 cursor-not-allowed'
               : 'bg-orange-500 hover:bg-orange-600'
           }`}
         >
-          <CreditCard className="w-5 h-5" />
           <span>Pay Securely with Card</span>
           <span className="text-lg">›</span>
         </button>

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getImageState, updateImageState } from '@/services/supabase'
+import { getImageState } from '@/services/supabase'
 import { getSupabaseClient } from '@/services/supabase'
 
 export async function POST(
@@ -33,6 +33,14 @@ export async function POST(
       )
     }
 
+    // Check if image has been purchased
+    if (!imageState.purchased) {
+      return NextResponse.json(
+        { success: false, error: 'Image has not been purchased. Please complete payment first.' },
+        { status: 403 }
+      )
+    }
+
     // Generate public URL for the full resolution image
     const supabase = getSupabaseClient();
     const { data } = supabase.storage
@@ -61,9 +69,6 @@ export async function POST(
         { status: 500 }
       )
     }
-
-    // Update purchase state in database
-    await updateImageState(uuid, { purchased: true });
 
     return NextResponse.json({
       success: true,

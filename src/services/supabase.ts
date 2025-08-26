@@ -75,6 +75,10 @@ export interface ImageState {
   error_message: string | null;
   user_id: string | null;
   purchased: boolean;
+  payment_intent_id: string | null;
+  payment_status: string | null;
+  payment_amount: number | null;
+  purchased_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -134,7 +138,7 @@ export const createImageState = async (uuid: string, inputBucketId: string, user
 
 export const updateImageState = async (
   uuid: string,
-  updates: Partial<Pick<ImageState, "output_bucket_id" | "preview_bucket_id" | "error_message" | "purchased">>
+  updates: Partial<Pick<ImageState, "output_bucket_id" | "preview_bucket_id" | "error_message" | "purchased" | "payment_intent_id" | "payment_status" | "payment_amount" | "purchased_at">>
 ) => {
   const admin = getSupabaseAdmin();
   
@@ -272,4 +276,76 @@ export const validateImageFile = (file: File) => {
   }
 
   return true;
+};
+
+// Payment-related functions
+export const validateImageForPayment = async (uuid: string): Promise<ImageState> => {
+  const admin = getSupabaseAdmin();
+  
+  const { data: imageState, error } = await admin
+    .from('images_state')
+    .select('*')
+    .eq('uuid', uuid)
+    .single();
+
+  if (error || !imageState) {
+    throw new Error('Image not found');
+  }
+
+  if (!imageState.preview_bucket_id) {
+    throw new Error('Image not ready for purchase');
+  }
+
+  if (imageState.purchased) {
+    throw new Error('Image already purchased');
+  }
+
+  return imageState as unknown as ImageState;
+};
+
+export const createPaymentIntent = async (uuid: string, paymentIntentId: string, amount: number) => {
+  const admin = getSupabaseAdmin();
+  
+  const { error } = await admin
+    .from('images_state')
+    .update({
+      payment_intent_id: paymentIntentId,
+      payment_status: 'pending',
+      payment_amount: amount,
+    })
+    .eq('uuid', uuid);
+
+  if (error) {
+    throw new Error(`Failed to update image state with payment intent: ${error.message}`);
+  }
+};
+
+export const verifyPaymentAndUnlock = async (uuid: string, paymentIntentId: string) => {
+  const admin = getSupabaseAdmin();
+  
+  // First verify the payment intent matches the image
+  const imageState = await getImageState(uuid);
+  if (!imageState) {
+    throw new Error('Image not found');
+  }
+
+  if (imageState.payment_intent_id !== paymentIntentId) {
+    throw new Error('Payment intent does not match this image');
+  }
+
+  // Update the image as purchased
+  const { error } = await admin
+    .from('images_state')
+    .update({
+      purchased: true,
+      payment_status: 'succeeded',
+      purchased_at: new Date().toISOString(),
+    })
+    .eq('uuid', uuid);
+
+  if (error) {
+    throw new Error(`Failed to unlock image: ${error.message}`);
+  }
+
+  return imageState;
 };
