@@ -21,7 +21,7 @@ export default function LoadingPage({ params }: LoadingPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { uuid } = use(params);
-  const { ensureAnonymousUser } = useAuth();
+  const { ensureAnonymousUser, getCurrentUserId } = useAuth();
 
   useEffect(() => {
     if (!uuid) {
@@ -35,7 +35,9 @@ export default function LoadingPage({ params }: LoadingPageProps) {
 
         if (!existingState) {
           // No database entry - this is first time, create entry and start processing
-          const userId = await ensureAnonymousUser();
+          // Check if user is already authenticated before creating anonymous user
+          const currentUserId = await getCurrentUserId();
+          const userId = currentUserId || await ensureAnonymousUser();
           
           // Get file extension from URL params, validate it, and reconstruct filename
           const fileExtension = searchParams.get('ext') || 'png';
