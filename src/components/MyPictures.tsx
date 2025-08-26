@@ -70,35 +70,31 @@ export default function MyPictures({}: MyPicturesProps) {
       {/* Title */}
       <div className="flex flex-col">
         <span className="text-gray-800 font-medium text-base">My Pictures</span>
-        {isAuthenticated && (
-          <span className="text-xs text-green-600">✓ Signed in</span>
-        )}
+        {isAuthenticated && <span className="text-xs text-green-600">✓ Signed in</span>}
       </div>
 
       {/* Image Bubbles */}
       <div className="flex -space-x-2">
-        {loading ? (
-          // Skeleton loaders
-          Array.from({ length: 3 }).map((_, index) => (
-            <div key={`skeleton-${index}`} className="relative">
-              <div className="w-8 h-8 rounded-lg bg-gray-200 animate-pulse border-2 border-white shadow-sm"></div>
-            </div>
-          ))
-        ) : (
-          displayImages.slice(0, 3).map((image, index) => (
-            <div key={index} className="relative">
-              <div className="w-8 h-8 rounded-lg overflow-hidden border-2 border-white shadow-sm">
-                <Image
-                  src={image}
-                  alt={`Picture ${index + 1}`}
-                  width={32}
-                  height={32}
-                  className="w-full h-full object-cover"
-                />
+        {loading
+          ? // Skeleton loaders
+            Array.from({ length: 3 }).map((_, index) => (
+              <div key={`skeleton-${index}`} className="relative">
+                <div className="w-8 h-8 rounded-lg bg-gray-200 animate-pulse border-2 border-white shadow-sm"></div>
               </div>
-            </div>
-          ))
-        )}
+            ))
+          : displayImages.slice(0, 3).map((image, index) => (
+              <div key={index} className="relative">
+                <div className="w-8 h-8 rounded-lg overflow-hidden border-2 border-white shadow-sm">
+                  <Image
+                    src={image}
+                    alt={`Picture ${index + 1}`}
+                    width={32}
+                    height={32}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              </div>
+            ))}
 
         {/* Counter bubble */}
         <div className="w-8 h-8 rounded-lg bg-pink-400 border-2 border-white shadow-sm flex items-center justify-center">
