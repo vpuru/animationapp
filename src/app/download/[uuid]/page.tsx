@@ -141,7 +141,7 @@ export default function DownloadPage({ params }: DownloadPageProps) {
           <div className="mb-0">
             <Image
               src={imageUrl}
-              alt="Generated headshot"
+              alt="Generated animation"
               width={288}
               height={288}
               className="w-full max-w-xs mx-auto rounded-2xl shadow-2xl"

@@ -13,9 +13,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Studio Quality Animation Generator",
-  description:
-    "Transform your photos into stunning Animations with our AI-powered headshot generator.",
+  title: "Animate My World",
+  description: "Transform your photos into stunning animations with our professional AI-powered animation studio.",
+  icons: {
+    icon: "/mocha-light.svg",
+    apple: "/mocha-light.svg",
+  },
 };
 
 export default function RootLayout({
@@ -25,9 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {children}
-      </body>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>{children}</body>
     </html>
   );
 }

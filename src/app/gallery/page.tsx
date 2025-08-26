@@ -97,7 +97,7 @@ export default function GalleryPage() {
             ))
           ) : images.length === 0 ? (
             <div className="col-span-full text-center text-gray-600 py-16">
-              No images found. Create your first headshot!
+              No animations found. Create your first animation!
             </div>
           ) : (
             images.map((image) => {
@@ -118,7 +118,7 @@ export default function GalleryPage() {
                   {imageUrl && (
                     <Image
                       src={imageUrl}
-                      alt={`Generated headshot ${image.uuid}`}
+                      alt={`Generated animation ${image.uuid}`}
                       width={400}
                       height={400}
                       className="w-full aspect-square object-cover rounded-lg shadow-md"

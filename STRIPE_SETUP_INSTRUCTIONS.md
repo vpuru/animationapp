@@ -12,7 +12,7 @@ First, run the SQL migration to add payment tracking fields:
 
 ```sql
 -- Add payment tracking fields to images_state table
-ALTER TABLE images_state 
+ALTER TABLE images_state
 ADD COLUMN payment_intent_id TEXT,
 ADD COLUMN payment_status TEXT DEFAULT 'pending',
 ADD COLUMN payment_amount INTEGER,
@@ -30,6 +30,7 @@ CREATE INDEX idx_images_state_payment_status ON images_state(payment_status);
 1. **Login to Stripe Dashboard**: Go to [dashboard.stripe.com](https://dashboard.stripe.com)
 
 2. **Create a Product**:
+
    - Navigate to **Products** in your Stripe Dashboard
    - Click **"Add product"**
    - Fill in product details:
@@ -60,9 +61,10 @@ STRIPE_WEBHOOK_SECRET=whsec_your_actual_webhook_secret_here
 ## 4. Set Up Stripe Webhooks
 
 1. **Create Webhook Endpoint**:
+
    - In Stripe Dashboard, go to **Developers** → **Webhooks**
    - Click **"Add endpoint"**
-   - Endpoint URL: `https://your-domain.com/api/webhooks/stripe`
+   - Endpoint URL: `https://animatemyworld.com/api/webhooks/stripe`
    - Select events to send:
      - `payment_intent.succeeded`
      - `payment_intent.payment_failed`
@@ -79,11 +81,13 @@ STRIPE_WEBHOOK_SECRET=whsec_your_actual_webhook_secret_here
 ### Test in Development Mode
 
 1. **Start your development server**:
+
    ```bash
    npm run dev
    ```
 
 2. **Use Stripe Test Cards**:
+
    - **Successful payment**: `4242 4242 4242 4242`
    - **Payment requires authentication**: `4000 0025 0000 3155`
    - **Payment is declined**: `4000 0000 0000 0002`
@@ -100,19 +104,22 @@ STRIPE_WEBHOOK_SECRET=whsec_your_actual_webhook_secret_here
 ### Test Webhooks Locally
 
 1. **Install Stripe CLI** (if not already installed):
+
    ```bash
    # macOS
    brew install stripe/stripe-cli/stripe
-   
+
    # Or download from https://github.com/stripe/stripe-cli/releases
    ```
 
 2. **Login to Stripe CLI**:
+
    ```bash
    stripe login
    ```
 
 3. **Forward webhooks to your local server**:
+
    ```bash
    stripe listen --forward-to localhost:3000/api/webhooks/stripe
    ```
@@ -124,18 +131,21 @@ STRIPE_WEBHOOK_SECRET=whsec_your_actual_webhook_secret_here
 Before deploying to production:
 
 ### Environment Variables
+
 - [ ] Update `STRIPE_ANIMATION_IMAGE_SINGLE_PRICE_ID` with production price ID
 - [ ] Update `STRIPE_WEBHOOK_SECRET` with production webhook secret
 - [ ] Ensure `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` uses live keys (starts with `pk_live_`)
 - [ ] Ensure `NEXT_PUBLIC_STRIPE_SECRET_KEY` uses live keys (starts with `sk_live_`)
 
 ### Stripe Dashboard Configuration
+
 - [ ] Create production product and price
 - [ ] Set up production webhook endpoint with your live domain
 - [ ] Test with real payment methods (small amounts)
 - [ ] Configure Stripe account settings (business details, bank account, etc.)
 
 ### Security Considerations
+
 - [ ] Webhook endpoint is using HTTPS
 - [ ] All environment variables are properly secured
 - [ ] Test webhook signature verification
@@ -144,12 +154,14 @@ Before deploying to production:
 ## 7. Monitoring and Maintenance
 
 ### Regular Checks
+
 - Monitor Stripe Dashboard for failed payments
 - Check webhook delivery status in Stripe Dashboard
 - Monitor application logs for payment-related errors
 - Review successful payment notifications
 
 ### Error Handling
+
 - Failed payments are logged in Stripe Dashboard
 - Webhook failures are retried automatically by Stripe
 - Application errors are logged to console (configure proper logging in production)
@@ -157,18 +169,22 @@ Before deploying to production:
 ## 8. Common Issues and Solutions
 
 ### Payment Intent Creation Fails
+
 - **Issue**: "Price not found" error
 - **Solution**: Verify `STRIPE_ANIMATION_IMAGE_SINGLE_PRICE_ID` is correct and active
 
 ### Webhooks Not Working
+
 - **Issue**: Payments succeed but images aren't unlocked
 - **Solution**: Check webhook endpoint URL and signing secret
 
 ### Payment Form Not Loading
+
 - **Issue**: Stripe Elements not appearing
 - **Solution**: Verify `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` is correct
 
 ### Database Errors
+
 - **Issue**: Payment tracking fields not found
 - **Solution**: Ensure database migration was run successfully
 
@@ -182,6 +198,7 @@ Before deploying to production:
 ## Next Steps
 
 After completing this setup:
+
 1. Test the complete payment flow thoroughly
 2. Monitor the first few real transactions closely
 3. Consider adding additional payment methods (Apple Pay, Google Pay) in the future

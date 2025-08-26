@@ -17,7 +17,7 @@ interface LoadingPageProps {
 
 export default function LoadingPage({ params }: LoadingPageProps) {
   const [error, setError] = useState<string | null>(null);
-  const [processingStage, setProcessingStage] = useState("Initializing...");
+  const [processingStage, setProcessingStage] = useState("Starting animation studio...");
   const router = useRouter();
   const searchParams = useSearchParams();
   const { uuid } = use(params);
@@ -77,7 +77,7 @@ export default function LoadingPage({ params }: LoadingPageProps) {
 
     const processImage = async () => {
       try {
-        setProcessingStage("Processing your image...");
+        setProcessingStage("Creating your animation...");
 
         const response = await fetch(`/api/process-image/${uuid}`, {
           method: "POST",

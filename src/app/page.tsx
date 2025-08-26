@@ -44,7 +44,7 @@ export default function Home() {
           </h1>
           {/* <h1 className="text-3xl md:text-5xl font-bold text-black">AI Headshot Generator</h1> */}
           <p className="text-gray-600 text-lg mt-6 max-w-2xl mx-auto">
-            Couples photos, baby pictures, or even just a selfie - beautifully animated!
+            Professional animation studio powered by AI. Transform your photos into stunning Studio Ghibli-style animations in minutes.
           </p>
           <div className="mt-8">
             <UploadButton />

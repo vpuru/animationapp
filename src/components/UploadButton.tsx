@@ -117,7 +117,7 @@ export default function UploadButton() {
         className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-semibold px-8 py-4 rounded-lg text-lg transition-all duration-200 shadow-lg active:scale-95 cursor-pointer border-2 border-dashed border-transparent hover:border-blue-300"
       >
         <div className="flex flex-col items-center space-y-2">
-          <div>Click here to upload!</div>
+          <div>Start Your Animation</div>
         </div>
       </div>
 
