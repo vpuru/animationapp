@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: false,
+  serverExternalPackages: ['sharp'],
   images: {
     loader: 'custom',
     loaderFile: './src/lib/supabase-image-loader.ts',

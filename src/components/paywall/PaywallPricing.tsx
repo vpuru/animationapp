@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { StripeProvider, PaymentForm } from "@/components/stripe";
+import Image from "next/image";
 
 interface PaywallPricingProps {
   uuid: string;
@@ -163,9 +164,16 @@ export default function PaywallPricing({ uuid }: PaywallPricingProps) {
               <span>Processing...</span>
             </div>
           ) : (
-            <div className="flex items-center justify-center space-x-2">
-              <span>Buy with</span>
-              <span className="font-bold">🍎 Pay</span>
+            <div className="flex items-center justify-center space-x-1">
+              <span className="text-white text-sm">Buy with</span>
+              <Image 
+                src="/apple-logo.svg" 
+                alt="Apple" 
+                width={16} 
+                height={16} 
+                className="text-white filter brightness-0 invert"
+              />
+              <span className="text-white text-sm font-medium">Pay</span>
             </div>
           )}
         </button>
