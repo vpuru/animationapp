@@ -77,6 +77,41 @@ export const addPadlockOverlay = async (imageBlob: Blob): Promise<Blob> => {
 };
 
 /**
+ * Converts any image format to PNG using Sharp
+ * Handles HEIC, JPEG, WebP, PNG automatically with optimal compression
+ * @param imageBlob - The original image blob in any supported format
+ * @returns Promise<Blob> - PNG image blob
+ */
+export const convertImageToPNG = async (imageBlob: Blob): Promise<Blob> => {
+  try {
+    // Convert blob to buffer
+    const imageBuffer = Buffer.from(await imageBlob.arrayBuffer());
+    
+    // Get metadata to understand the input image
+    const metadata = await sharp(imageBuffer).metadata();
+    console.log(`Converting ${metadata.format} image (${metadata.width}x${metadata.height}) to PNG`);
+    
+    // Convert to PNG with optimal settings
+    const pngBuffer = await sharp(imageBuffer)
+      .png({
+        compressionLevel: 6, // Good balance of size vs speed
+        adaptiveFiltering: true, // Better compression for complex images
+        force: true // Force PNG output regardless of input format
+      })
+      .toBuffer();
+    
+    console.log(`Conversion complete: ${imageBuffer.length} bytes → ${pngBuffer.length} bytes`);
+    
+    // Convert buffer back to blob
+    return new Blob([new Uint8Array(pngBuffer)], { type: 'image/png' });
+    
+  } catch (error) {
+    console.error('Sharp image conversion error:', error);
+    throw new Error(`Failed to convert image to PNG: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+};
+
+/**
  * Utility function to convert a blob to base64
  * @param blob - The blob to convert
  * @returns Promise<string> - Base64 encoded string

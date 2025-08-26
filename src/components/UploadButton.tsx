@@ -3,7 +3,6 @@
 import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
-import imageCompression from "browser-image-compression";
 import { uploadToInputBucket, validateImageFile } from "@/services/supabase";
 
 export default function UploadButton() {
@@ -19,84 +18,6 @@ export default function UploadButton() {
     }
   };
 
-  const convertToPNG = async (file: File): Promise<File> => {
-    try {
-      let sourceFile = file;
-
-      // Handle HEIC files first
-      if (file.type === "image/heic" || file.name.toLowerCase().endsWith('.heic')) {
-        // Dynamically import heic2any to avoid SSR issues
-        const heic2any = (await import("heic2any")).default;
-
-        const convertedBlob = (await heic2any({
-          blob: file,
-          toType: "image/png",
-          quality: 1.0,
-        })) as Blob;
-
-        sourceFile = new File([convertedBlob], file.name.replace(/\.heic$/i, ".png"), {
-          type: "image/png",
-          lastModified: file.lastModified,
-        });
-      }
-
-      // If already PNG, proceed to compression check
-      let pngFile = sourceFile;
-
-      // Convert non-PNG formats to PNG using canvas
-      if (sourceFile.type !== "image/png") {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        const img = new Image();
-
-        const imageUrl = URL.createObjectURL(sourceFile);
-
-        await new Promise((resolve, reject) => {
-          img.onload = resolve;
-          img.onerror = reject;
-          img.src = imageUrl;
-        });
-
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx?.drawImage(img, 0, 0);
-
-        const pngBlob = await new Promise<Blob>((resolve) => {
-          canvas.toBlob((blob) => resolve(blob!), "image/png", 1.0);
-        });
-
-        URL.revokeObjectURL(imageUrl);
-
-        pngFile = new File([pngBlob], file.name.replace(/\.[^/.]+$/, ".png"), {
-          type: "image/png",
-          lastModified: file.lastModified,
-        });
-      }
-
-      // Check if compression is needed (4MB limit)
-      const maxSizeBytes = 4 * 1024 * 1024;
-      if (pngFile.size <= maxSizeBytes) {
-        return pngFile;
-      }
-
-      // Compress PNG to get under 4MB
-      const options = {
-        maxSizeMB: 3.8,
-        useWebWorker: true,
-        fileType: "image/png" as const,
-      };
-
-      const compressedFile = await imageCompression(pngFile, options);
-
-      return new File([compressedFile], file.name.replace(/\.[^/.]+$/, ".png"), {
-        type: "image/png",
-        lastModified: file.lastModified,
-      });
-    } catch (error) {
-      console.error("Image conversion error:", error);
-      throw new Error("Failed to convert image to PNG format. Please try a different image.");
-    }
-  };
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -107,28 +28,27 @@ export default function UploadButton() {
     setUploadProgress(0);
 
     try {
-      // Validate file
+      // Validate file (now allows all supported formats)
       validateImageFile(file);
-
-      // Convert to PNG and compress if needed
       setUploadProgress(20);
-      const pngFile = await convertToPNG(file);
 
       // Generate UUID for this upload
       const imageUuid = uuidv4();
-      const fileName = `${imageUuid}.png`;
+      // Keep original file extension for backend processing
+      const fileExtension = file.name.split('.').pop() || 'png';
+      const fileName = `${imageUuid}.${fileExtension}`;
 
       setUploadProgress(60);
 
-      // Upload to Supabase
-      await uploadToInputBucket(pngFile, fileName);
+      // Upload original file to Supabase (backend will handle conversion)
+      await uploadToInputBucket(file, fileName);
 
       setUploadProgress(100);
 
       // Small delay to show 100% progress
       setTimeout(() => {
-        // Navigate to loading page with UUID
-        router.push(`/loading/${imageUuid}`);
+        // Navigate to loading page with UUID and file extension
+        router.push(`/loading/${imageUuid}?ext=${fileExtension}`);
       }, 500);
     } catch (err) {
       console.error("Upload error:", err);

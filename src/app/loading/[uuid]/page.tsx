@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import FadingImages from "@/components/FadingImages";
 import ProgressBar from "@/components/ProgressBar";
 import CyclingText from "@/components/CyclingText";
@@ -19,6 +19,7 @@ export default function LoadingPage({ params }: LoadingPageProps) {
   const [error, setError] = useState<string | null>(null);
   const [processingStage, setProcessingStage] = useState("Initializing...");
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { uuid } = use(params);
   const { ensureAnonymousUser } = useAuth();
 
@@ -35,7 +36,17 @@ export default function LoadingPage({ params }: LoadingPageProps) {
         if (!existingState) {
           // No database entry - this is first time, create entry and start processing
           const userId = await ensureAnonymousUser();
-          await createImageState(uuid, `${uuid}.png`, userId);
+          
+          // Get file extension from URL params, validate it, and reconstruct filename
+          const fileExtension = searchParams.get('ext') || 'png';
+          const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'heic'];
+          
+          if (!allowedExtensions.includes(fileExtension.toLowerCase())) {
+            throw new Error(`Invalid file extension: ${fileExtension}`);
+          }
+          
+          const inputBucketId = `${uuid}.${fileExtension}`;
+          await createImageState(uuid, inputBucketId, userId);
           // Continue to processImage()
           return false; // Indicates we should proceed with processing
         }

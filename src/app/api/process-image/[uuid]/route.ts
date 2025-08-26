@@ -12,7 +12,7 @@ import {
   downloadImageFromUrl, 
   getFileExtension 
 } from '@/services/openai'
-import { addPadlockOverlay } from '@/services/imageProcessing'
+import { addPadlockOverlay, convertImageToPNG } from '@/services/imageProcessing'
 
 export async function POST(
   request: NextRequest,
@@ -54,22 +54,26 @@ export async function POST(
     })
 
     try {
-      // Since we now always upload PNG files, look for PNG specifically
-      const inputBucketId = `${uuid}.png`
+      // Look for the uploaded file (could be any format now)
+      const inputBucketId = existingState.input_bucket_id
       
-      console.log(`Downloading PNG image: ${inputBucketId}`)
+      console.log(`Downloading image: ${inputBucketId}`)
       const inputImageBlob = await downloadFromInputBucket(inputBucketId)
       
       if (!inputImageBlob) {
-        throw new Error('Could not find uploaded PNG image')
+        throw new Error('Could not find uploaded image')
       }
+
+      // Convert image to PNG format using Sharp (handles all formats)
+      console.log('Converting image to PNG format...')
+      const pngImageBlob = await convertImageToPNG(inputImageBlob)
 
       // Use existing state (entry is guaranteed to exist from check above)
       console.log(`Using existing record for UUID: ${uuid}`)
 
-      // Transform image using OpenAI
+      // Transform image using OpenAI (using converted PNG)
       console.log('Processing image with OpenAI...')
-      const ghibliImageUrl = await transformImageToGhibli(inputImageBlob)
+      const ghibliImageUrl = await transformImageToGhibli(pngImageBlob)
       
       // Download the processed image
       console.log('Downloading processed image from OpenAI...')

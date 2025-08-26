@@ -262,12 +262,18 @@ export const getUserImages = async (userId: string): Promise<ImageState[]> => {
 export const validateImageFile = (file: File) => {
   const maxSize = 10 * 1024 * 1024; // 10MB
   const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/heic"];
+  const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.heic'];
 
   if (file.size > maxSize) {
     throw new Error("File size must be less than 10MB");
   }
 
-  if (!allowedTypes.includes(file.type)) {
+  // Check both MIME type and file extension for better HEIC support
+  const fileName = file.name.toLowerCase();
+  const hasValidType = allowedTypes.includes(file.type);
+  const hasValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext));
+
+  if (!hasValidType && !hasValidExtension) {
     throw new Error("File must be a JPEG, PNG, WebP, or HEIC image");
   }
 
