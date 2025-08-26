@@ -49,7 +49,33 @@ export async function POST(request: NextRequest) {
       console.warn('Could not verify user types via identities table:', error);
     }
 
-    console.log(`Migration verified: from anonymous user ${fromUserId} to authenticated user ${toUserId}`);
+    console.log(`Account merge verified: from anonymous user ${fromUserId} to authenticated user ${toUserId}`);
+
+    // First, check how many images we're migrating
+    const { data: imagesToMigrate, error: countError } = await supabaseAdmin
+      .from('images_state')
+      .select('uuid, created_at')
+      .eq('user_id', fromUserId);
+
+    if (countError) {
+      console.error('Error counting images to migrate:', countError);
+      return NextResponse.json(
+        { error: `Failed to count images: ${countError.message}` },
+        { status: 500 }
+      );
+    }
+
+    const imageCount = imagesToMigrate?.length || 0;
+    console.log(`Merging ${imageCount} images from anonymous user to authenticated user`);
+
+    if (imageCount === 0) {
+      console.log('No images to migrate');
+      return NextResponse.json({ 
+        success: true,
+        message: `No images found for anonymous user ${fromUserId}`,
+        imagesMigrated: 0
+      });
+    }
 
     // Migrate all images_state records from anonymous user to authenticated user
     const { error } = await supabaseAdmin
@@ -65,11 +91,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`Successfully migrated data from ${fromUserId} to ${toUserId}`);
+    console.log(`Successfully merged ${imageCount} images from ${fromUserId} to ${toUserId}`);
 
     return NextResponse.json({ 
       success: true,
-      message: `Successfully migrated data from ${fromUserId} to ${toUserId}`
+      message: `Successfully merged ${imageCount} images into your Google account`,
+      imagesMigrated: imageCount,
+      fromUserId,
+      toUserId
     });
   } catch (error) {
     console.error('Migration API error:', error);

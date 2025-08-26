@@ -31,24 +31,21 @@ export default function LoadingPage({ params }: LoadingPageProps) {
     const checkDatabaseState = async () => {
       try {
         const existingState = await getImageState(uuid);
-        
+
         if (!existingState) {
           // No database entry - this is first time, create entry and start processing
-          console.log('No database entry found, creating new entry and starting processing');
           const userId = await ensureAnonymousUser();
           await createImageState(uuid, `${uuid}.png`, userId);
           // Continue to processImage()
           return false; // Indicates we should proceed with processing
         }
-        
+
         if (existingState.output_bucket_id) {
           // Image already completed, redirect to paywall
-          console.log('Image already completed, redirecting to paywall');
           router.push(`/paywall/${uuid}`);
           return true; // Indicates we handled the request
         } else {
           // Entry exists but no output - processing in progress or failed (refresh case)
-          console.log('Processing already in progress or failed, redirecting home');
           setError("Processing is already in progress. Please wait or try again later.");
           setTimeout(() => {
             router.push("/");
@@ -56,7 +53,7 @@ export default function LoadingPage({ params }: LoadingPageProps) {
           return true; // Indicates we handled the request
         }
       } catch (err) {
-        console.error('Database check error:', err);
+        console.error("Database check error:", err);
         setError("Failed to check processing status");
         setTimeout(() => {
           router.push("/");

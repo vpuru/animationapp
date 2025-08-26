@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 export default function ProgressBar() {
   const [progress, setProgress] = useState(0);
-  const totalDuration = 60000; // 60 seconds in milliseconds
+  const totalDuration = 60000; // 60 seconds to match actual processing time
   const updateInterval = 100; // Update every 100ms for smooth animation
   const increment = 100 / (totalDuration / updateInterval); // Calculate increment per update
 

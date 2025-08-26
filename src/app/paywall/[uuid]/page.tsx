@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
-import { getPreviewUrl, getImageState, getImageUrl } from "@/services/supabase";
+import { getImageState, getImageUrl } from "@/services/supabase";
 import {
   PaywallHero,
   PaywallFeatures,
@@ -21,7 +21,9 @@ export default function PaywallPage({ params }: PaywallPageProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const { uuid } = use(params);
+  const { uuid: rawUuid } = use(params);
+  // Extract UUID from filename if it contains _ghibli.png
+  const uuid = rawUuid.replace(/_ghibli\.png$/, '');
 
   useEffect(() => {
     if (!uuid) {
@@ -45,14 +47,20 @@ export default function PaywallPage({ params }: PaywallPageProps) {
           return;
         }
 
+        if (imageState.purchased) {
+          // Image already purchased, redirect to download page
+          router.push(`/download/${uuid}`);
+          return;
+        }
+
         // Get preview image URL using the same method as gallery
         const previewUrl = getImageUrl(imageState);
-        
+
         if (!previewUrl) {
           setError("Preview image URL could not be generated");
           return;
         }
-        
+
         setPreviewImageUrl(previewUrl);
       } catch (err) {
         console.error("Error checking image:", err);

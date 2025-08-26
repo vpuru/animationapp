@@ -10,7 +10,7 @@ import testimonialsData from "@/data/testimonials.json";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function Home() {
-  const { loading, user } = useAuth();
+  const { loading, user, isAuthenticated, signInWithGoogle } = useAuth();
 
   const mockHeadshots = [
     "asset_images/chatgpt-image-1.png",
@@ -48,6 +48,16 @@ export default function Home() {
           </p>
           <div className="mt-8">
             <UploadButton />
+            {!loading && !isAuthenticated && (
+              <div className="mt-4">
+                <button
+                  onClick={signInWithGoogle}
+                  className="text-blue-600 hover:text-blue-800 text-sm underline transition-colors"
+                >
+                  click here to login
+                </button>
+              </div>
+            )}
           </div>
         </div>
         <div className="space-y-4 md:space-y-8">

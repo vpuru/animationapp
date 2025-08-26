@@ -29,8 +29,8 @@ export function useAuth(): UseAuthReturn {
     let authSubscription: Subscription | null = null;
 
     const handleAuthStateChange = async (authenticatedUser: User): Promise<void> => {
+      // Only handle migration for conflict scenarios (when linkIdentity failed)
       if (authenticatedUser && !authenticatedUser.is_anonymous) {
-        // Check if we have a pending migration
         const pendingMigrationId = localStorage.getItem("pendingMigration");
 
         if (pendingMigrationId && pendingMigrationId !== authenticatedUser.id) {
@@ -38,10 +38,10 @@ export function useAuth(): UseAuthReturn {
             await migrateAnonymousData(pendingMigrationId, authenticatedUser.id);
             localStorage.removeItem("pendingMigration");
 
-            // Notify user of successful migration
-            console.log("Successfully migrated your anonymous data to your Google account!");
+            // Notify user of successful merge
+            console.log("Successfully merged your images with your Google account!");
           } catch (error) {
-            console.error("Failed to migrate anonymous data:", error);
+            console.error("Failed to merge anonymous data:", error);
             // Keep the pending migration flag in case of retry
           }
         }
@@ -50,14 +50,14 @@ export function useAuth(): UseAuthReturn {
 
     const migrateAnonymousData = async (fromUserId: string, toUserId: string): Promise<void> => {
       try {
-        const response = await fetch('/api/migrate-data', {
-          method: 'POST',
+        const response = await fetch("/api/migrate-data", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             fromUserId,
-            toUserId
+            toUserId,
           }),
         });
 
@@ -78,7 +78,10 @@ export function useAuth(): UseAuthReturn {
       try {
         // Get initial session with timeout
         const supabase = getSupabaseClient();
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
 
         if (error) {
           console.error("Supabase auth session error:", error);
@@ -91,7 +94,9 @@ export function useAuth(): UseAuthReturn {
         }
 
         // Set up auth state listener
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        const {
+          data: { subscription },
+        } = supabase.auth.onAuthStateChange(async (event, session) => {
           if (mounted) {
             setUser(session?.user ?? null);
             setLoading(false);
@@ -134,19 +139,63 @@ export function useAuth(): UseAuthReturn {
   // Auth actions
   const signInWithGoogle = async () => {
     const supabase = getSupabaseClient();
-
-    // Store current anonymous user ID for potential migration
     const currentUser = user;
-    if (currentUser && currentUser.is_anonymous) {
-      localStorage.setItem("pendingMigration", currentUser.id);
-    }
 
-    return await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
+    // If user is anonymous, try linkIdentity first (preserves user_id)
+    if (currentUser && currentUser.is_anonymous) {
+      try {
+        console.log("Attempting to link Google identity to anonymous user...");
+
+        const { data, error } = await supabase.auth.linkIdentity({
+          provider: "google",
+          options: {
+            redirectTo: `${window.location.origin}/auth/callback`,
+          },
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        console.log("Successfully linked Google identity - no migration needed!");
+        return { data, error: null };
+      } catch (linkError: unknown) {
+        const errorMessage = linkError instanceof Error ? linkError.message : String(linkError);
+        console.log("Link identity failed, falling back to merge strategy:", errorMessage);
+
+        // If linking failed due to existing account, use merge strategy
+        if (
+          errorMessage?.includes("already linked") ||
+          errorMessage?.includes("Identity is already linked")
+        ) {
+          // Store anonymous user ID for merge after OAuth redirect
+          localStorage.setItem("pendingMigration", currentUser.id);
+
+          // Fallback to standard OAuth flow which will create/sign into existing account
+          console.log("Using merge strategy - will transfer data to existing Google account");
+          return await supabase.auth.signInWithOAuth({
+            provider: "google",
+            options: {
+              redirectTo: `${window.location.origin}/auth/callback`,
+            },
+          });
+        } else {
+          // Re-throw other errors
+          return {
+            data: null,
+            error: linkError instanceof Error ? linkError : new Error(String(linkError)),
+          };
+        }
+      }
+    } else {
+      // User is not anonymous, use standard OAuth flow
+      return await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+    }
   };
 
   const signOut = async () => {

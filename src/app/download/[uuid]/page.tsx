@@ -5,7 +5,14 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { getImageState, getImageUrl } from "@/services/supabase";
 import type { ImageState } from "@/services/supabase";
-import { DownloadIcon, QualityIcon, ShareIcon, LinkIcon, UserIcon, GoogleIcon } from "@/components/icons";
+import {
+  DownloadIcon,
+  QualityIcon,
+  ShareIcon,
+  LinkIcon,
+  UserIcon,
+  GoogleIcon,
+} from "@/components/icons";
 import { useAuth } from "@/hooks/useAuth";
 
 interface DownloadPageProps {
@@ -20,20 +27,30 @@ export default function DownloadPage({ params }: DownloadPageProps) {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const router = useRouter();
-  const { uuid } = React.use(params);
-  const { isAuthenticated, signInWithGoogle } = useAuth();
+  const { uuid: rawUuid } = React.use(params);
+  // Extract UUID from filename if it contains _ghibli.png
+  const uuid = rawUuid.replace(/_ghibli\.png$/, "");
+  const { isAuthenticated, signInWithGoogle, getCurrentUserId } = useAuth();
 
   useEffect(() => {
     async function loadImage() {
       try {
         const imageState = await getImageState(uuid);
+        const currentUserId = await getCurrentUserId();
+
         if (!imageState) {
           setError("Image not found");
           return;
         }
 
+        if (imageState.user_id != currentUserId) {
+          router.push(`/`);
+          return;
+        }
+
         if (!imageState.purchased) {
-          setError("Image not purchased");
+          // Image not purchased, redirect to paywall
+          router.push(`/paywall/${uuid}`);
           return;
         }
 
@@ -52,7 +69,7 @@ export default function DownloadPage({ params }: DownloadPageProps) {
     }
 
     loadImage();
-  }, [uuid]);
+  }, [uuid, router]);
 
   const handleDownload = () => {
     if (!image) return;
@@ -83,18 +100,18 @@ export default function DownloadPage({ params }: DownloadPageProps) {
   const handleSignIn = async () => {
     try {
       // Store return path for after auth
-      sessionStorage.setItem('authReturnTo', window.location.pathname);
-      
+      sessionStorage.setItem("authReturnTo", window.location.pathname);
+
       const { error } = await signInWithGoogle();
-      
+
       if (error) {
-        console.error('Google sign-in error:', error);
-        setError('Failed to sign in with Google. Please try again.');
+        console.error("Google sign-in error:", error);
+        setError("Failed to sign in with Google. Please try again.");
       }
       // OAuth flow will redirect to callback page
     } catch (error) {
-      console.error('Sign-in error:', error);
-      setError('Failed to sign in with Google. Please try again.');
+      console.error("Sign-in error:", error);
+      setError("Failed to sign in with Google. Please try again.");
     }
   };
 
