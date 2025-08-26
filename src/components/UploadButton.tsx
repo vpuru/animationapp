@@ -184,7 +184,6 @@ export default function UploadButton() {
         ref={fileInputRef}
         type="file"
         accept="image/*,.heic"
-        capture="environment"
         onChange={handleFileSelect}
         className="hidden"
         aria-label="Upload image file"
