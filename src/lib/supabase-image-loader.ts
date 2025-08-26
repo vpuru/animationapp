@@ -12,6 +12,12 @@ export default function supabaseLoader({
   width: number;
   quality?: number;
 }) {
+  // If src starts with '/', it's a static file from the public folder
+  if (src.startsWith('/')) {
+    return src;
+  }
+  
+  // Otherwise, it's a Supabase storage file path
   return `https://${projectId}.supabase.co/storage/v1/render/image/public/${src}?quality=${
     quality || 75
   }`;
