@@ -61,13 +61,18 @@ const saveDebugFile = async (file: File, debugFilename: string): Promise<void> =
 const getImageDimensions = async (imageFile: Blob): Promise<{ width: number; height: number }> => {
   try {
     const buffer = Buffer.from(await imageFile.arrayBuffer());
-    const metadata = await sharp(buffer).metadata();
+    
+    // Apply EXIF orientation correction to get visual dimensions
+    const rotatedMetadata = await sharp(buffer)
+      .rotate() // Auto-apply EXIF orientation
+      .metadata();
 
-    if (!metadata.width || !metadata.height) {
+    if (!rotatedMetadata.width || !rotatedMetadata.height) {
       throw new Error("Could not determine image dimensions");
     }
 
-    return { width: metadata.width, height: metadata.height };
+    console.log(`[DEBUG] Image dimensions after EXIF correction: ${rotatedMetadata.width}x${rotatedMetadata.height}`);
+    return { width: rotatedMetadata.width, height: rotatedMetadata.height };
   } catch (error) {
     throw new Error(
       "Failed to get image dimensions: " +

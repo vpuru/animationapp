@@ -89,16 +89,23 @@ export const convertImageToPNG = async (imageBlob: Blob): Promise<Blob> => {
     
     // Get metadata to understand the input image
     const metadata = await sharp(imageBuffer).metadata();
-    console.log(`Converting ${metadata.format} image (${metadata.width}x${metadata.height}) to PNG`);
+    console.log(`Converting ${metadata.format} image - Original: ${metadata.width}x${metadata.height}, EXIF orientation: ${metadata.orientation || 'none'}`);
     
-    // Convert to PNG with optimal settings
-    const pngBuffer = await sharp(imageBuffer)
+    // Apply EXIF orientation and convert to PNG
+    const sharpPipeline = sharp(imageBuffer)
+      .rotate() // Auto-apply EXIF orientation to preserve visual appearance
       .png({
         compressionLevel: 6, // Good balance of size vs speed
         adaptiveFiltering: true, // Better compression for complex images
         force: true // Force PNG output regardless of input format
-      })
-      .toBuffer();
+      });
+    
+    // Get final dimensions after rotation
+    const rotatedMetadata = await sharpPipeline.clone().metadata();
+    console.log(`After orientation correction: ${rotatedMetadata.width}x${rotatedMetadata.height}`);
+    
+    // Convert to buffer
+    const pngBuffer = await sharpPipeline.toBuffer();
     
     console.log(`Conversion complete: ${imageBuffer.length} bytes → ${pngBuffer.length} bytes`);
     
