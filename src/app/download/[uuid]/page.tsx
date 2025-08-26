@@ -212,7 +212,7 @@ export default function DownloadPage({ params }: DownloadPageProps) {
             <div className="flex gap-3">
               <button
                 onClick={handleDownload}
-                className="flex-1 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white px-6 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg transition-all duration-200"
+                className="flex-1 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white px-4 py-3 rounded-xl text-sm md:text-md font-medium flex items-center justify-center gap-2 shadow-lg transition-all duration-200"
               >
                 <DownloadIcon />
                 Download
@@ -220,7 +220,7 @@ export default function DownloadPage({ params }: DownloadPageProps) {
 
               <button
                 onClick={handleCopyLink}
-                className="flex-1 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-6 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-200"
+                className="flex-1 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-4 py-3 rounded-xl text-sm md:text-md font-medium flex items-center justify-center gap-2 transition-all duration-200"
               >
                 <LinkIcon />
                 {copied ? "Link Copied!" : "Copy Link"}
