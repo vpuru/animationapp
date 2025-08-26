@@ -1,4 +1,6 @@
 
+import Image from 'next/image';
+
 interface PaywallHeroProps {
   previewImageUrl: string;
   imageLoaded: boolean;
@@ -32,9 +34,11 @@ export default function PaywallHero({
       {/* Preview image with overlay */}
       {previewImageUrl && (
         <div className="relative w-full max-w-60 mx-auto aspect-square overflow-hidden rounded-lg">
-          <img
+          <Image
             src={previewImageUrl}
             alt="Preview of your processed image"
+            width={240}
+            height={240}
             className={`w-full h-full object-contain transition-opacity duration-300 ${
               imageLoaded ? "opacity-100" : "opacity-0"
             }`}

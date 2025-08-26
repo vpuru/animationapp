@@ -234,14 +234,10 @@ export const getPreviewUrl = (uuid: string) => {
 };
 
 export const getImageUrl = (image: ImageState): string | null => {
-  const supabase = getSupabaseClient();
-  
   if (image.purchased && image.output_bucket_id) {
-    const { data } = supabase.storage.from("output_images").getPublicUrl(image.output_bucket_id);
-    return data.publicUrl;
+    return `output_images/${image.output_bucket_id}`;
   } else if (image.preview_bucket_id) {
-    const { data } = supabase.storage.from("preview_images").getPublicUrl(image.preview_bucket_id);
-    return data.publicUrl;
+    return `preview_images/${image.preview_bucket_id}`;
   }
   return null;
 };

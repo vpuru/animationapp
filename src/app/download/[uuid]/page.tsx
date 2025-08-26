@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { getImageState, getImageUrl } from "@/services/supabase";
 import type { ImageState } from "@/services/supabase";
 import { DownloadIcon, QualityIcon, ShareIcon, LinkIcon, UserIcon, GoogleIcon } from "@/components/icons";
@@ -121,9 +122,11 @@ export default function DownloadPage({ params }: DownloadPageProps) {
         {/* Hero Image - clean without overlay text */}
         {imageUrl && (
           <div className="mb-0">
-            <img
+            <Image
               src={imageUrl}
               alt="Generated headshot"
+              width={288}
+              height={288}
               className="w-full max-w-xs mx-auto rounded-2xl shadow-2xl"
             />
           </div>

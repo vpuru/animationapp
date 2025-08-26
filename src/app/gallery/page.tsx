@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { getUserImages, getImageUrl } from '@/services/supabase';
 import type { ImageState } from '@/services/supabase';
 import { useAuth } from '@/hooks/useAuth';
@@ -115,9 +116,11 @@ export default function GalleryPage() {
                   className="cursor-pointer"
                 >
                   {imageUrl && (
-                    <img
+                    <Image
                       src={imageUrl}
                       alt={`Generated headshot ${image.uuid}`}
+                      width={400}
+                      height={400}
                       className="w-full aspect-square object-cover rounded-lg shadow-md"
                     />
                   )}
