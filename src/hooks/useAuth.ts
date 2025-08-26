@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { getSupabaseClient } from "@/services/supabase";
-import type { User, Subscription } from "@supabase/supabase-js";
+import type { User, Subscription, AuthApiError } from "@supabase/supabase-js";
 
 interface UseAuthReturn {
   // State
@@ -19,6 +19,32 @@ interface UseAuthReturn {
   getCurrentUserId: () => Promise<string | null>;
 }
 
+// Helper function to determine if error requires merge strategy
+const shouldUseMergeStrategy = (error: unknown): boolean => {
+  // Check if it's an AuthApiError with specific status codes
+  if (error && typeof error === 'object' && 'status' in error) {
+    const apiError = error as AuthApiError;
+    // 409 Conflict = identity already linked or email conflict
+    // 422 Unprocessable Entity = cannot process due to state
+    return apiError.status === 409 || apiError.status === 422;
+  }
+
+  // Check if it's an AuthError with specific patterns
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+    return (
+      message.includes('already linked') ||
+      message.includes('identity is already linked') ||
+      message.includes('already in use') ||
+      message.includes('email already exists') ||
+      message.includes('conflict') ||
+      message.includes('duplicate')
+    );
+  }
+
+  return false;
+};
+
 export function useAuth(): UseAuthReturn {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,6 +60,8 @@ export function useAuth(): UseAuthReturn {
         const pendingMigrationId = localStorage.getItem("pendingMigration");
 
         if (pendingMigrationId && pendingMigrationId !== authenticatedUser.id) {
+          console.log(`Attempting to migrate data from ${pendingMigrationId} to ${authenticatedUser.id}`);
+          
           try {
             await migrateAnonymousData(pendingMigrationId, authenticatedUser.id);
             localStorage.removeItem("pendingMigration");
@@ -42,8 +70,18 @@ export function useAuth(): UseAuthReturn {
             console.log("Successfully merged your images with your Google account!");
           } catch (error) {
             console.error("Failed to merge anonymous data:", error);
-            // Keep the pending migration flag in case of retry
+            
+            // Even if migration fails, user should stay signed in
+            // Remove the pending migration to prevent retry loops
+            localStorage.removeItem("pendingMigration");
+            
+            // Log the error but don't throw - user authentication should not fail
+            console.warn("Migration failed but user remains authenticated. Some images may not have transferred.");
           }
+        } else if (pendingMigrationId && pendingMigrationId === authenticatedUser.id) {
+          // LinkIdentity was successful, clean up
+          console.log("LinkIdentity successful - cleaning up migration flag");
+          localStorage.removeItem("pendingMigration");
         }
       }
     };
@@ -160,27 +198,41 @@ export function useAuth(): UseAuthReturn {
         console.log("Successfully linked Google identity - no migration needed!");
         return { data, error: null };
       } catch (linkError: unknown) {
-        const errorMessage = linkError instanceof Error ? linkError.message : String(linkError);
-        console.log("Link identity failed, falling back to merge strategy:", errorMessage);
+        console.log("Link identity failed, analyzing error type:", linkError);
 
-        // If linking failed due to existing account, use merge strategy
-        if (
-          errorMessage?.includes("already linked") ||
-          errorMessage?.includes("Identity is already linked")
-        ) {
+        // Check if this is an identity conflict that requires migration
+        const requiresMerge = shouldUseMergeStrategy(linkError);
+
+        if (requiresMerge) {
           // Store anonymous user ID for merge after OAuth redirect
           localStorage.setItem("pendingMigration", currentUser.id);
+          console.log(`Storing pendingMigration: ${currentUser.id} for merge strategy`);
 
           // Fallback to standard OAuth flow which will create/sign into existing account
           console.log("Using merge strategy - will transfer data to existing Google account");
-          return await supabase.auth.signInWithOAuth({
-            provider: "google",
-            options: {
-              redirectTo: `${window.location.origin}/auth/callback`,
-            },
-          });
+          
+          try {
+            const oauthResult = await supabase.auth.signInWithOAuth({
+              provider: "google",
+              options: {
+                redirectTo: `${window.location.origin}/auth/callback`,
+              },
+            });
+            
+            // OAuth initiated successfully
+            return oauthResult;
+          } catch (oauthError) {
+            console.error("OAuth flow failed:", oauthError);
+            // Clean up pending migration on OAuth failure
+            localStorage.removeItem("pendingMigration");
+            return {
+              data: null,
+              error: oauthError instanceof Error ? oauthError : new Error(String(oauthError)),
+            };
+          }
         } else {
-          // Re-throw other errors
+          // Re-throw other errors that don't require merge strategy
+          console.error("Link identity failed with non-recoverable error:", linkError);
           return {
             data: null,
             error: linkError instanceof Error ? linkError : new Error(String(linkError)),
