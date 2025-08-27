@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { StripeProvider, PaymentForm } from "@/components/stripe";
-import Image from "next/image";
 
 interface PaywallPricingProps {
   uuid: string;
@@ -146,52 +145,28 @@ export default function PaywallPricing({ uuid }: PaywallPricingProps) {
         </div>
       )}
 
-      {/* Payment Buttons */}
-      <div className="space-y-3">
-        {/* Apple Pay Button - Future implementation */}
-        <button
-          onClick={createPaymentIntent}
-          disabled={isLoading}
-          className={`w-full py-4 rounded-lg font-semibold text-white transition-all duration-200 ${
-            isLoading
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-black hover:bg-gray-800'
-          }`}
-        >
-          {isLoading ? (
-            <div className="flex items-center justify-center space-x-2">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-              <span>Processing...</span>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center space-x-1">
-              <span className="text-white text-sm">Buy with</span>
-              <Image 
-                src="/apple-logo.svg" 
-                alt="Apple" 
-                width={16} 
-                height={16} 
-                className="text-white filter brightness-0 invert"
-              />
-              <span className="text-white text-sm font-medium">Pay</span>
-            </div>
-          )}
-        </button>
-
-        {/* Card Payment Button */}
-        <button
-          onClick={createPaymentIntent}
-          disabled={isLoading}
-          className={`w-full py-4 rounded-lg font-semibold text-white transition-all duration-200 flex items-center justify-center space-x-2 ${
-            isLoading
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-orange-500 hover:bg-orange-600'
-          }`}
-        >
-          <span>Pay Securely with Card</span>
-          <span className="text-lg">›</span>
-        </button>
-      </div>
+      {/* Payment Button */}
+      <button
+        onClick={createPaymentIntent}
+        disabled={isLoading}
+        className={`w-full py-4 rounded-lg font-semibold text-white transition-all duration-200 flex items-center justify-center space-x-2 ${
+          isLoading
+            ? 'bg-gray-400 cursor-not-allowed'
+            : 'bg-orange-500 hover:bg-orange-600'
+        }`}
+      >
+        {isLoading ? (
+          <div className="flex items-center justify-center space-x-2">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+            <span>Processing...</span>
+          </div>
+        ) : (
+          <>
+            <span>Continue to Payment</span>
+            <span className="text-lg">›</span>
+          </>
+        )}
+      </button>
     </div>
   );
 }

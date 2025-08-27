@@ -83,6 +83,7 @@ export default function PaymentForm({
       <PaymentElement 
         options={{
           layout: 'tabs',
+          paymentMethodOrder: ['apple_pay', 'google_pay', 'card'],
         }}
       />
       <button
@@ -102,7 +103,7 @@ export default function PaymentForm({
         ) : (
           <>
             <CreditCard className="w-5 h-5" />
-            <span>Pay Securely with Card</span>
+            <span>Complete Payment</span>
           </>
         )}
       </button>

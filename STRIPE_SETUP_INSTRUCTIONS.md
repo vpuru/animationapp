@@ -141,6 +141,10 @@ Before deploying to production:
 
 - [ ] Create production product and price
 - [ ] Set up production webhook endpoint with your live domain
+- [ ] **Apple Pay Setup**: Add and verify your production domain for Apple Pay
+  - Go to Settings → Payment methods → Apple Pay
+  - Add your production domain (e.g., `animatemyworld.com`)
+  - Upload the domain verification file to your server root
 - [ ] Test with real payment methods (small amounts)
 - [ ] Configure Stripe account settings (business details, bank account, etc.)
 
@@ -187,6 +191,15 @@ Before deploying to production:
 
 - **Issue**: Payment tracking fields not found
 - **Solution**: Ensure database migration was run successfully
+
+### Apple Pay Not Appearing
+
+- **Issue**: Apple Pay option not showing in payment form
+- **Solution**: Check the following:
+  - Device supports Apple Pay (Safari on macOS/iOS or Chrome with Apple Pay enabled)
+  - Domain is verified in Stripe Dashboard (for production)
+  - Payment intent includes `apple_pay` in `payment_method_types`
+  - User has Apple Pay set up on their device
 
 ## 9. Support and Resources
 

@@ -18,7 +18,6 @@ export default function UploadButton() {
     }
   };
 
-
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -35,7 +34,7 @@ export default function UploadButton() {
       // Generate UUID for this upload
       const imageUuid = uuidv4();
       // Keep original file extension for backend processing
-      const fileExtension = file.name.split('.').pop() || 'png';
+      const fileExtension = file.name.split(".").pop() || "png";
       const fileName = `${imageUuid}.${fileExtension}`;
 
       setUploadProgress(60);
@@ -117,7 +116,7 @@ export default function UploadButton() {
         className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-semibold px-8 py-4 rounded-lg text-lg transition-all duration-200 shadow-lg active:scale-95 cursor-pointer border-2 border-dashed border-transparent hover:border-blue-300"
       >
         <div className="flex flex-col items-center space-y-2">
-          <div>Start Your Animation</div>
+          <div>Click to Upload</div>
         </div>
       </div>
 
