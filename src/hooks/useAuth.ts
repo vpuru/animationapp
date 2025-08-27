@@ -210,15 +210,18 @@ export function useAuth(): UseAuthReturn {
 
           // Fallback to standard OAuth flow which will create/sign into existing account
           console.log("Using merge strategy - will transfer data to existing Google account");
-          
+
           try {
+            // Sign out first so OAuth signs into the existing account instead of linking
+            await supabase.auth.signOut();
+
             const oauthResult = await supabase.auth.signInWithOAuth({
               provider: "google",
               options: {
                 redirectTo: `${window.location.origin}/auth/callback`,
               },
             });
-            
+
             // OAuth initiated successfully
             return oauthResult;
           } catch (oauthError) {
