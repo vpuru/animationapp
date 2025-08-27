@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import FadingImages from "@/components/FadingImages";
 import ProgressBar from "@/components/ProgressBar";
@@ -22,6 +22,7 @@ export default function LoadingPage({ params }: LoadingPageProps) {
   const searchParams = useSearchParams();
   const { uuid } = use(params);
   const { ensureAnonymousUser, getCurrentUserId } = useAuth();
+  const fileExtensionRef = useRef(searchParams.get("ext") || "png");
 
   useEffect(() => {
     if (!uuid) {
@@ -37,16 +38,16 @@ export default function LoadingPage({ params }: LoadingPageProps) {
           // No database entry - this is first time, create entry and start processing
           // Check if user is already authenticated before creating anonymous user
           const currentUserId = await getCurrentUserId();
-          const userId = currentUserId || await ensureAnonymousUser();
-          
+          const userId = currentUserId || (await ensureAnonymousUser());
+
           // Get file extension from URL params, validate it, and reconstruct filename
-          const fileExtension = searchParams.get('ext') || 'png';
-          const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'heic'];
-          
+          const fileExtension = fileExtensionRef.current;
+          const allowedExtensions = ["jpg", "jpeg", "png", "webp", "heic"];
+
           if (!allowedExtensions.includes(fileExtension.toLowerCase())) {
             throw new Error(`Invalid file extension: ${fileExtension}`);
           }
-          
+
           const inputBucketId = `${uuid}.${fileExtension}`;
           await createImageState(uuid, inputBucketId, userId);
           // Continue to processImage()
@@ -117,7 +118,7 @@ export default function LoadingPage({ params }: LoadingPageProps) {
     };
 
     handleRequest();
-  }, [uuid, router, ensureAnonymousUser, getCurrentUserId, searchParams]);
+  }, [uuid, router, ensureAnonymousUser, getCurrentUserId]);
 
   if (error) {
     return (
