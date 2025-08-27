@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import ConfettiExplosion from "react-confetti-explosion";
 import { getImageState, getImageUrl, getImageDownloadUrl } from "@/services/supabase";
 import type { ImageState } from "@/services/supabase";
 import {
@@ -27,6 +28,7 @@ export default function DownloadPage({ params }: DownloadPageProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [isExploding, setIsExploding] = useState(false);
   const router = useRouter();
   const { uuid: rawUuid } = React.use(params);
   // Extract UUID from filename if it contains _ghibli.png
@@ -77,6 +79,7 @@ export default function DownloadPage({ params }: DownloadPageProps) {
     }
 
     loadImage();
+    setIsExploding(true);
   }, [uuid, router]);
 
   const handleDownload = () => {
@@ -156,7 +159,12 @@ export default function DownloadPage({ params }: DownloadPageProps) {
       <div className="w-full max-w-md mx-auto">
         {/* Hero Image - clean without overlay text */}
         {imageUrl && (
-          <div className="mb-0">
+          <div className="relative mb-0">
+            {isExploding && (
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                <ConfettiExplosion onComplete={() => setIsExploding(false)} />
+              </div>
+            )}
             <Image
               src={imageUrl}
               alt="Generated animation"

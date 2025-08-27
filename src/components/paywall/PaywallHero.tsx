@@ -1,5 +1,7 @@
 
 import Image from 'next/image';
+import { useEffect, useState } from 'react';
+import ConfettiExplosion from 'react-confetti-explosion';
 
 interface PaywallHeroProps {
   previewImageUrl: string;
@@ -14,6 +16,12 @@ export default function PaywallHero({
   onImageLoad,
   onImageError,
 }: PaywallHeroProps) {
+  const [isExploding, setIsExploding] = useState(false);
+
+  useEffect(() => {
+    setIsExploding(true);
+  }, []);
+
   return (
     <div className="relative mb-0">
       {/* Skeleton placeholder */}
@@ -34,6 +42,11 @@ export default function PaywallHero({
       {/* Preview image with overlay */}
       {previewImageUrl && (
         <div className="relative w-full max-w-60 mx-auto aspect-square overflow-hidden rounded-lg">
+          {isExploding && (
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+              <ConfettiExplosion onComplete={() => setIsExploding(false)} />
+            </div>
+          )}
           <Image
             src={previewImageUrl}
             alt="Preview of your processed image"
