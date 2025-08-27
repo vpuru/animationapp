@@ -4,6 +4,7 @@ import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 import { uploadToInputBucket, validateImageFile } from "@/services/supabase";
+import { trackEvent } from "@/lib/analytics";
 
 export default function UploadButton() {
   const [isUploading, setIsUploading] = useState(false);
@@ -22,9 +23,18 @@ export default function UploadButton() {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    const startTime = performance.now();
+    
     setError(null);
     setIsUploading(true);
     setUploadProgress(0);
+
+    // Track upload start
+    trackEvent.uploadPhoto({
+      fileSize: file.size,
+      fileType: file.type,
+      fileExtension: file.name.split('.').pop() || 'unknown'
+    });
 
     try {
       // Validate file (now allows all supported formats)
@@ -44,6 +54,13 @@ export default function UploadButton() {
 
       setUploadProgress(100);
 
+      // Track successful upload
+      const processingTime = performance.now() - startTime;
+      trackEvent.uploadSuccess({
+        processingTime,
+        fileSize: file.size
+      });
+
       // Small delay to show 100% progress
       setTimeout(() => {
         // Navigate to loading page with UUID and file extension
@@ -51,7 +68,12 @@ export default function UploadButton() {
       }, 500);
     } catch (err) {
       console.error("Upload error:", err);
-      setError(err instanceof Error ? err.message : "Upload failed");
+      const errorMessage = err instanceof Error ? err.message : "Upload failed";
+      
+      // Track upload error
+      trackEvent.uploadError(errorMessage);
+      
+      setError(errorMessage);
       setIsUploading(false);
       setUploadProgress(0);
     }

@@ -8,6 +8,7 @@ import {
 } from '@stripe/react-stripe-js';
 import { CreditCard } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { trackEvent } from '@/lib/analytics';
 
 interface PaymentFormProps {
   clientSecret: string;
@@ -44,8 +45,17 @@ export default function PaymentForm({
       });
 
       if (error) {
+        // Track payment error
+        trackEvent.paymentError(error.message || 'An error occurred', uuid);
         onError(error.message || 'An error occurred');
       } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+        // Track payment success
+        trackEvent.paymentSuccess({
+          amount: paymentIntent.amount,
+          currency: paymentIntent.currency,
+          paymentMethod: paymentIntent.payment_method?.type || 'unknown',
+          uuid: uuid
+        });
         // Verify payment on server side before redirecting
         try {
           const verifyResponse = await fetch('/api/verify-payment', {

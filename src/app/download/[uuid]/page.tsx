@@ -14,6 +14,7 @@ import {
   GoogleIcon,
 } from "@/components/icons";
 import { useAuth } from "@/hooks/useAuth";
+import { trackEvent } from "@/lib/analytics";
 
 interface DownloadPageProps {
   params: Promise<{
@@ -60,9 +61,16 @@ export default function DownloadPage({ params }: DownloadPageProps) {
         }
 
         setImage(imageState);
+        
+        // Track successful download page view
+        trackEvent.pageView('download-page', { uuid, purchased: 'true' });
       } catch (err) {
         console.error("Failed to load image:", err);
-        setError(err instanceof Error ? err.message : "Failed to load image");
+        const errorMessage = err instanceof Error ? err.message : "Failed to load image";
+        setError(errorMessage);
+        
+        // Track error on download page
+        trackEvent.errorOccurred(errorMessage, 'download-page', { uuid });
       } finally {
         setLoading(false);
       }
@@ -75,7 +83,13 @@ export default function DownloadPage({ params }: DownloadPageProps) {
     if (!image) return;
     const imageUrl = getImageDownloadUrl(image);
     if (imageUrl) {
+      // Track download started
+      trackEvent.downloadStarted(uuid, 'high-resolution');
+      
       window.open(imageUrl, "_blank");
+      
+      // Track download completed (assuming immediate success for direct link)
+      trackEvent.downloadCompleted(uuid, 'high-resolution');
     }
   };
 
@@ -87,8 +101,12 @@ export default function DownloadPage({ params }: DownloadPageProps) {
         await navigator.clipboard.writeText(imageUrl);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
+        
+        // Track copy link usage
+        trackEvent.featureUsed('Copy Link', { uuid });
       } catch (err) {
         console.error("Failed to copy link:", err);
+        trackEvent.errorOccurred('Copy link failed', 'download-page', { uuid });
       }
     }
   };

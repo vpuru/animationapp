@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { StripeProvider, PaymentForm } from "@/components/stripe";
+import { trackEvent } from "@/lib/analytics";
 
 interface PaywallPricingProps {
   uuid: string;
@@ -41,6 +42,13 @@ export default function PaywallPricing({ uuid }: PaywallPricingProps) {
     setIsLoading(true);
     setError(null);
 
+    // Track payment initiation
+    trackEvent.paymentInitiated({
+      amount: 299, // $2.99 in cents
+      currency: 'USD',
+      uuid: uuid
+    });
+
     try {
       const userId = await getCurrentUserId();
       
@@ -65,6 +73,10 @@ export default function PaywallPricing({ uuid }: PaywallPricingProps) {
       setShowPaymentForm(true);
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to initialize payment';
+      
+      // Track payment error
+      trackEvent.paymentError(errorMessage, uuid);
+      
       setError(errorMessage);
     } finally {
       setIsLoading(false);
