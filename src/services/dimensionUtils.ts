@@ -3,7 +3,7 @@
  * Provides robust algorithms for image dimension analysis and optimization
  */
 
-import { trackEvent } from '@/lib/analytics';
+import { trackEvent } from '@/lib/analytics-server';
 
 // TypeScript interfaces for dimension handling
 export interface Dimensions {
