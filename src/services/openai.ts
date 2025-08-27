@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import sharp from "sharp";
 import fs from "fs";
 import path from "path";
+import { determineOptimalOpenAISize, type Dimensions } from "./dimensionUtils";
 
 const openaiApiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
 
@@ -195,10 +196,15 @@ export const transformImageToGhibli = async (imageFile: Blob): Promise<string> =
 
     // Get dimensions for mask generation
     const { width, height } = await getImageDimensions(imageFile);
+    const dimensions: Dimensions = { width, height };
 
     console.log(
       `[DEBUG] Input image - Size: ${imageFile.size} bytes, Type: ${imageFile.type}, Dimensions: ${width}x${height}`
     );
+
+    // Determine optimal OpenAI size using smart dimension analysis
+    const sizeDecision = determineOptimalOpenAISize(dimensions);
+    console.log(`[DEBUG] Size decision: ${sizeDecision.reasoning}`);
 
     // Convert to File for SDK
     const inputFile = blobToFile(imageFile, "input.png");
@@ -232,18 +238,18 @@ export const transformImageToGhibli = async (imageFile: Blob): Promise<string> =
     // await saveDebugFile(maskFile, `debug-mask-${Date.now()}.png`);
 
     console.log(
-      `[DEBUG] Calling OpenAI images.edit API with model: gpt-image-1, size: auto, input dimensions: ${width}x${height}`
+      `[DEBUG] Calling OpenAI images.edit API with model: gpt-image-1, size: ${sizeDecision.size}, input dimensions: ${width}x${height}`
     );
 
-    // Call Images Edit endpoint
+    // Call Images Edit endpoint with smart size selection
     const editResponse = await openai.images.edit({
       model: "gpt-image-1",
       image: inputFile,
       mask: maskFile,
       prompt:
-        "Convert the input photo into a Studio Ghibli–inspired, hand-drawn animation portrait with clean line art and soft cel shading. Preserve the person’s identity (same face shape, eye spacing and gaze, nose/mouth position, hairline, and hairstyle). Face specifications: eyes are almond-shaped, single dark outline, simple flat-color irises with one small highlight per eye, no extra pupils or eyelids; eyebrows a single clear stroke that matches natural thickness; nose is a minimal mark (tiny ‘L’ or dot) with no photoreal shading; mouth is small and tidy (single line with subtle fill, no overdrawn lips or teeth unless smiling). Ears align with eye level. Symmetrical features, no distortion. Mouth clarity: small, tidy, anime-style mouth with a single clean outline; subtle upward curve, no heavy lip definition. Closed mouth by default with a soft, flat fill 5–10% darker than skin; no gloss, no texture, no pores. If smiling/open: render as a simple bean shape with one interior shadow; teeth as a single white band, no individual tooth lines, no gum exposure, no tongue unless laughing (then tiny, rounded, single-color). Corners soft, centered on the facial midline, proportional to face (not wide). No double lines, smearing, or blur; edges crisp, anti-aliased. Keep shading to 2–3 cel tones only. Rendering: 2–3 tone cel shading (flat colors + soft bounce light), outer contour slightly thicker than interior lines, pastel palette, warm ambient light, very light blush on cheeks, no pores or photoreal textures. Background is soft, painterly, and low-detail. Composition: centered, chest-up portrait at a 3/4 angle. Face perfectly clean and symmetrical; flawless eyes; tidy line work on eyelids; accurate eye spacing; no artifacts or doubling. Avoid: melting or warped features, asymmetry, stretched faces, glassy/over-detailed eyes, heavy gradients, photoreal textures, extreme lens distortion. High quality, crisp, charming, expressive.",
+        "Convert the input photo into a Studio Ghibli–inspired, hand-drawn animation portrait with clean line art and soft cel shading. Preserve the person's identity (same face shape, eye spacing and gaze, nose/mouth position, hairline, and hairstyle). Face specifications: eyes are almond-shaped, single dark outline, simple flat-color irises with one small highlight per eye, no extra pupils or eyelids; eyebrows a single clear stroke that matches natural thickness; nose is a minimal mark (tiny 'L' or dot) with no photoreal shading; mouth is small and tidy (single line with subtle fill, no overdrawn lips or teeth unless smiling). Ears align with eye level. Symmetrical features, no distortion. Mouth clarity: small, tidy, anime-style mouth with a single clean outline; subtle upward curve, no heavy lip definition. Closed mouth by default with a soft, flat fill 5–10% darker than skin; no gloss, no texture, no pores. If smiling/open: render as a simple bean shape with one interior shadow; teeth as a single white band, no individual tooth lines, no gum exposure, no tongue unless laughing (then tiny, rounded, single-color). Corners soft, centered on the facial midline, proportional to face (not wide). No double lines, smearing, or blur; edges crisp, anti-aliased. Keep shading to 2–3 cel tones only. Rendering: 2–3 tone cel shading (flat colors + soft bounce light), outer contour slightly thicker than interior lines, pastel palette, warm ambient light, very light blush on cheeks, no pores or photoreal textures. Background is soft, painterly, and low-detail. Composition: centered, chest-up portrait at a 3/4 angle. Face perfectly clean and symmetrical; flawless eyes; tidy line work on eyelids; accurate eye spacing; no artifacts or doubling. Avoid: melting or warped features, asymmetry, stretched faces, glassy/over-detailed eyes, heavy gradients, photoreal textures, extreme lens distortion. High quality, crisp, charming, expressive.",
       n: 1,
-      size: "auto",
+      size: sizeDecision.size,
     });
 
     console.log(
@@ -251,6 +257,9 @@ export const transformImageToGhibli = async (imageFile: Blob): Promise<string> =
         editResponse.data?.length || 0
       }, Output format: ${editResponse.output_format || "unknown"}`
     );
+
+    // Log successful processing with dimension info
+    console.log(`[DEBUG] Successfully processed image with ${sizeDecision.size} dimensions (confidence: ${(sizeDecision.confidence * 100).toFixed(1)}%)`);
 
     if (!editResponse.data || editResponse.data.length === 0) {
       throw new Error("No Ghibli-style image generated");
