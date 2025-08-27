@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { StripeProvider, PaymentForm } from "@/components/stripe";
 import { trackEvent } from "@/lib/analytics";
+import PaywallExpressCheckout from "./PaywallExpressCheckout";
 
 interface PaywallPricingProps {
   uuid: string;
@@ -19,16 +20,16 @@ export default function PaywallPricing({ uuid }: PaywallPricingProps) {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft(prev => {
+      setTimeLeft((prev) => {
         let { minutes, seconds } = prev;
-        
+
         if (seconds > 0) {
           seconds--;
         } else if (minutes > 0) {
           minutes--;
           seconds = 59;
         }
-        
+
         return { minutes, seconds };
       });
     }, 1000);
@@ -36,7 +37,7 @@ export default function PaywallPricing({ uuid }: PaywallPricingProps) {
     return () => clearInterval(timer);
   }, []);
 
-  const formatTime = (num: number) => num.toString().padStart(2, '0');
+  const formatTime = (num: number) => num.toString().padStart(2, "0");
 
   const createPaymentIntent = async () => {
     setIsLoading(true);
@@ -45,17 +46,17 @@ export default function PaywallPricing({ uuid }: PaywallPricingProps) {
     // Track payment initiation
     trackEvent.paymentInitiated({
       amount: 299, // $2.99 in cents
-      currency: 'USD',
-      uuid: uuid
+      currency: "USD",
+      uuid: uuid,
     });
 
     try {
       const userId = await getCurrentUserId();
-      
-      const response = await fetch('/api/create-payment-intent', {
-        method: 'POST',
+
+      const response = await fetch("/api/create-payment-intent", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           uuid: uuid,
@@ -65,18 +66,18 @@ export default function PaywallPricing({ uuid }: PaywallPricingProps) {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error?.message || 'Failed to create payment intent');
+        throw new Error(errorData.error?.message || "Failed to create payment intent");
       }
 
       const { clientSecret: secret } = await response.json();
       setClientSecret(secret);
       setShowPaymentForm(true);
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to initialize payment';
-      
+      const errorMessage = err instanceof Error ? err.message : "Failed to initialize payment";
+
       // Track payment error
       trackEvent.paymentError(errorMessage, uuid);
-      
+
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -99,11 +100,7 @@ export default function PaywallPricing({ uuid }: PaywallPricingProps) {
         )}
 
         <StripeProvider clientSecret={clientSecret}>
-          <PaymentForm
-            clientSecret={clientSecret}
-            uuid={uuid}
-            onError={handlePaymentError}
-          />
+          <PaymentForm clientSecret={clientSecret} uuid={uuid} onError={handlePaymentError} />
         </StripeProvider>
 
         <button
@@ -157,14 +154,15 @@ export default function PaywallPricing({ uuid }: PaywallPricingProps) {
         </div>
       )}
 
-      {/* Payment Button */}
+      {/* Express Checkout (Apple Pay, Google Pay) */}
+      <PaywallExpressCheckout uuid={uuid} />
+
+      {/* Card Payment Button */}
       <button
         onClick={createPaymentIntent}
         disabled={isLoading}
         className={`w-full py-4 rounded-lg font-semibold text-white transition-all duration-200 flex items-center justify-center space-x-2 ${
-          isLoading
-            ? 'bg-gray-400 cursor-not-allowed'
-            : 'bg-orange-500 hover:bg-orange-600'
+          isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-orange-500 hover:bg-orange-600"
         }`}
       >
         {isLoading ? (
