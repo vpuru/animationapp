@@ -5,7 +5,6 @@ const projectId = "ecbhdotmbwganuwiqyup"; // Your Supabase project ID
 
 export default function supabaseLoader({
   src,
-  width,
   quality,
 }: {
   src: string;

@@ -117,7 +117,7 @@ export default function LoadingPage({ params }: LoadingPageProps) {
     };
 
     handleRequest();
-  }, [uuid, router]);
+  }, [uuid, router, ensureAnonymousUser, getCurrentUserId, searchParams]);
 
   if (error) {
     return (

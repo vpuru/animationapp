@@ -34,7 +34,7 @@ export default function GalleryPage() {
     }
 
     loadUserImages();
-  }, [router]);
+  }, [router, getCurrentUserId]);
 
 
   if (error) {

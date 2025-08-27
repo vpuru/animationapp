@@ -35,7 +35,7 @@ export default function MyPictures({}: MyPicturesProps) {
     }
 
     loadUserImages();
-  }, []);
+  }, [getCurrentUserId]);
 
   const handleClick = () => {
     router.push("/gallery");

@@ -12,7 +12,7 @@ interface PaymentFormProps {
   onError: (error: string) => void;
 }
 
-export default function PaymentForm({ clientSecret, uuid, onError }: PaymentFormProps) {
+export default function PaymentForm({ uuid, onError }: PaymentFormProps) {
   const stripe = useStripe();
   const elements = useElements();
   const [isLoading, setIsLoading] = useState(false);
@@ -71,7 +71,7 @@ export default function PaymentForm({ clientSecret, uuid, onError }: PaymentForm
             const errorData = await verifyResponse.json();
             throw new Error(errorData.error?.message || "Payment verification failed");
           }
-        } catch (err: unknown) {
+        } catch {
           onError("Payment succeeded but verification failed. Please contact support.");
         }
       }

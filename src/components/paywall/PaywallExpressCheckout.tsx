@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { Elements, ExpressCheckoutElement } from "@stripe/react-stripe-js";
-import { loadStripe } from "@stripe/stripe-js";
-import { useRouter } from "next/navigation";
+import { loadStripe, StripeExpressCheckoutElementReadyEvent } from "@stripe/stripe-js";
 import { useAuth } from "@/hooks/useAuth";
 import { trackEvent } from "@/lib/analytics";
+import { useStripe, useElements } from "@stripe/react-stripe-js";
 
 // Load Stripe outside component to avoid recreating on every render
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
@@ -22,10 +22,13 @@ function ExpressCheckoutForm({ uuid }: ExpressCheckoutFormProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasExpressPaymentMethods, setHasExpressPaymentMethods] = useState<boolean | null>(null);
-  const router = useRouter();
   const { getCurrentUserId } = useAuth();
+  const stripe = useStripe();
+  const elements = useElements();
 
-  const handleExpressCheckout = async (event: any) => {
+  const handleExpressCheckout = async () => {
+    if (!stripe || !elements) return;
+
     setIsProcessing(true);
     setError(null);
 
@@ -36,6 +39,12 @@ function ExpressCheckoutForm({ uuid }: ExpressCheckoutFormProps) {
         currency: 'USD',
         uuid: uuid
       });
+
+      // Submit the form data first
+      const { error: submitError } = await elements.submit();
+      if (submitError) {
+        throw new Error(submitError.message || 'Failed to submit payment data');
+      }
 
       // Get current user ID
       const userId = await getCurrentUserId();
@@ -60,7 +69,8 @@ function ExpressCheckoutForm({ uuid }: ExpressCheckoutFormProps) {
       const { clientSecret } = await response.json();
 
       // Complete the payment with the payment intent
-      const { error: confirmError } = await event.complete({
+      const { error: confirmError } = await stripe.confirmPayment({
+        elements,
         clientSecret: clientSecret,
         confirmParams: {
           return_url: `${window.location.origin}/download/${uuid}`,
@@ -106,9 +116,9 @@ function ExpressCheckoutForm({ uuid }: ExpressCheckoutFormProps) {
     trackEvent.featureUsed('Express Checkout Cancelled', { uuid });
   };
 
-  const handleExpressCheckoutReady = (event: any) => {
+  const handleExpressCheckoutReady = (event: StripeExpressCheckoutElementReadyEvent) => {
     // Check if any express payment methods are available
-    const hasPaymentMethods = event.availablePaymentMethods && event.availablePaymentMethods.length > 0;
+    const hasPaymentMethods = Boolean(event.availablePaymentMethods && Object.keys(event.availablePaymentMethods).length > 0);
     
     setHasExpressPaymentMethods(hasPaymentMethods);
     
@@ -116,7 +126,7 @@ function ExpressCheckoutForm({ uuid }: ExpressCheckoutFormProps) {
       // Track that Express Checkout is available
       trackEvent.featureUsed('Express Checkout Available', { 
         uuid,
-        paymentMethods: event.availablePaymentMethods?.join(',') || 'unknown'
+        paymentMethods: Object.keys(event.availablePaymentMethods || {}).join(',') || 'unknown'
       });
     } else {
       // Track that Express Checkout is not available
@@ -145,7 +155,6 @@ function ExpressCheckoutForm({ uuid }: ExpressCheckoutFormProps) {
                 layout: {
                   maxColumns: 1,
                   maxRows: 1,
-                  overflow: 'never',
                 },
                 buttonTheme: {
                   applePay: 'black',
@@ -175,6 +184,7 @@ function ExpressCheckoutForm({ uuid }: ExpressCheckoutFormProps) {
           zIndex: -1
         }}>
           <ExpressCheckoutElement
+            onConfirm={handleExpressCheckout}
             onReady={handleExpressCheckoutReady}
             options={{
               paymentMethods: {
