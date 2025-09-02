@@ -7,7 +7,6 @@ import ProgressBar from "@/components/ProgressBar";
 import CyclingText from "@/components/CyclingText";
 import StarRating from "@/components/StarRating";
 import { getImageState, createImageState } from "@/services/supabase";
-import { useAuth } from "@/hooks/useAuth";
 
 interface LoadingPageProps {
   params: Promise<{
@@ -21,7 +20,6 @@ export default function LoadingPage({ params }: LoadingPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { uuid } = use(params);
-  const { ensureAnonymousUser, getCurrentUserId } = useAuth();
   const fileExtensionRef = useRef(searchParams.get("ext") || "png");
 
   useEffect(() => {
@@ -36,9 +34,7 @@ export default function LoadingPage({ params }: LoadingPageProps) {
 
         if (!existingState) {
           // No database entry - this is first time, create entry and start processing
-          // Check if user is already authenticated before creating anonymous user
-          const currentUserId = await getCurrentUserId();
-          const userId = currentUserId || (await ensureAnonymousUser());
+          // Create record without user_id (will be null), user can claim it later via cookies
 
           // Get file extension from URL params, validate it, and reconstruct filename
           const fileExtension = fileExtensionRef.current;
@@ -49,7 +45,7 @@ export default function LoadingPage({ params }: LoadingPageProps) {
           }
 
           const inputBucketId = `${uuid}.${fileExtension}`;
-          await createImageState(uuid, inputBucketId, userId);
+          await createImageState(uuid, inputBucketId, null); // No user_id, will be claimed via cookies
           // Continue to processImage()
           return false; // Indicates we should proceed with processing
         }
@@ -118,7 +114,7 @@ export default function LoadingPage({ params }: LoadingPageProps) {
     };
 
     handleRequest();
-  }, [uuid]);
+  }, [uuid, router]);
 
   if (error) {
     return (

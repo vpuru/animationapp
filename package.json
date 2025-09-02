@@ -21,6 +21,7 @@
     "next": "15.5.0",
     "openai": "^5.13.1",
     "react": "19.1.0",
+    "react-confetti": "^6.4.0",
     "react-dom": "19.1.0",
     "sharp": "0.32.6",
     "stripe": "^18.4.0",

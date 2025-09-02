@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 import { uploadToInputBucket, validateImageFile } from "@/services/supabase";
 import { trackEvent } from "@/lib/analytics";
+import { addImageUuidToCookie } from "@/lib/cookieUtils";
 
 export default function UploadButton() {
   const [isUploading, setIsUploading] = useState(false);
@@ -60,6 +61,12 @@ export default function UploadButton() {
         processingTime,
         fileSize: file.size
       });
+
+      // Add UUID to cookie for tracking this generation
+      const cookieAdded = addImageUuidToCookie(imageUuid);
+      if (!cookieAdded) {
+        console.warn('Failed to add UUID to cookie, user may lose access to this generation if not signed in');
+      }
 
       // Small delay to show 100% progress
       setTimeout(() => {

@@ -1,5 +1,9 @@
 
+'use client';
+
 import Image from 'next/image';
+import Confetti from 'react-confetti';
+import { useConfetti } from '@/hooks/useConfetti';
 
 interface PaywallHeroProps {
   previewImageUrl: string;
@@ -14,6 +18,11 @@ export default function PaywallHero({
   onImageLoad,
   onImageError,
 }: PaywallHeroProps) {
+  const { showConfetti, confettiSource } = useConfetti({
+    trigger: imageLoaded,
+    duration: 4000,
+  });
+
   return (
     <div className="relative mb-0">
       {/* Skeleton placeholder */}
@@ -44,6 +53,7 @@ export default function PaywallHero({
             }`}
             onLoad={onImageLoad}
             onError={onImageError}
+            data-confetti-target
           />
 
           {/* Overlay text - positioned at bottom */}
@@ -57,6 +67,29 @@ export default function PaywallHero({
             </div>
           )}
         </div>
+      )}
+      
+      {/* Confetti Effect */}
+      {showConfetti && confettiSource && (
+        <Confetti
+          width={typeof window !== 'undefined' ? window.innerWidth : 1200}
+          height={typeof window !== 'undefined' ? window.innerHeight : 800}
+          confettiSource={confettiSource}
+          numberOfPieces={200}
+          gravity={0.15}
+          initialVelocityX={5}
+          initialVelocityY={15}
+          colors={[
+            '#FFD700', '#FF6B35', '#F7931E', '#FFE66D',
+            '#06FFA5', '#4ECDC4', '#45B7D1', '#96CEB4',
+            '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F',
+            '#BB8FCE', '#85C1E9', '#F8C471', '#EC7063'
+          ]}
+          recycle={false}
+          run={showConfetti}
+          wind={0}
+          opacity={0.8}
+        />
       )}
     </div>
   );

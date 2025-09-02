@@ -8,9 +8,18 @@ import StatsCard from "@/components/StatsCard";
 import TestimonialCard, { TestimonialCardProps } from "@/components/TestimonialCard";
 import testimonialsData from "@/data/testimonials.json";
 import { useAuth } from "@/hooks/useAuth";
+import { getStoredImageCount } from "@/lib/cookieUtils";
+import { useEffect, useState } from "react";
 
 export default function Home() {
-  const { loading, user, isAuthenticated, signInWithGoogle } = useAuth();
+  const { loading, isAuthenticated, signInWithGoogle } = useAuth();
+  const [hasCookieImages, setHasCookieImages] = useState(false);
+
+  useEffect(() => {
+    // Check if user has any cookie-stored images
+    const cookieImageCount = getStoredImageCount();
+    setHasCookieImages(cookieImageCount > 0);
+  }, []);
 
   const mockHeadshots = [
     "asset_images/chatgpt-image-1.png",
@@ -26,11 +35,11 @@ export default function Home() {
           {loading ? (
             // Loading skeleton
             <div className="w-64 h-12 bg-gray-200 animate-pulse rounded-full"></div>
-          ) : user ? (
-            // Show MyPictures for any user (authenticated OR anonymous)
+          ) : isAuthenticated || hasCookieImages ? (
+            // Show MyPictures for authenticated users OR users with cookie images
             <MyPictures />
           ) : (
-            // Only show StatsCard when no user session at all
+            // Only show StatsCard when no user session and no cookie images
             <StatsCard />
           )}
         </div>

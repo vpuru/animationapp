@@ -99,7 +99,7 @@ export const uploadToInputBucket = async (file: File, fileName: string) => {
   return data;
 };
 
-export const createImageState = async (uuid: string, inputBucketId: string, userId: string) => {
+export const createImageState = async (uuid: string, inputBucketId: string, userId: string | null) => {
   const supabase = getSupabaseClient();
   
   // First, try to insert a new record
@@ -271,6 +271,36 @@ export const getUserImages = async (userId: string): Promise<ImageState[]> => {
   }
 
   return data as ImageState[];
+};
+
+export const getCookieImages = async (uuids: string[]): Promise<ImageState[]> => {
+  if (uuids.length === 0) {
+    return [];
+  }
+
+  const supabase = getSupabaseClient();
+  
+  const { data, error } = await supabase
+    .from("images_state")
+    .select("*")
+    .in("uuid", uuids)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(`Failed to get cookie images: ${error.message}`);
+  }
+
+  return data as ImageState[];
+};
+
+export const getImagesForUser = async (userId: string | null, cookieUuids: string[] = []): Promise<ImageState[]> => {
+  // If user is authenticated, get their images by user_id
+  if (userId) {
+    return await getUserImages(userId);
+  }
+  
+  // If user is not authenticated, get images by cookie UUIDs
+  return await getCookieImages(cookieUuids);
 };
 
 // Validation helpers

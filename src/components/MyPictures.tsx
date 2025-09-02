@@ -3,9 +3,10 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { getUserImages, getImageUrl } from "@/services/supabase";
+import { getImagesForUser, getImageUrl } from "@/services/supabase";
 import type { ImageState } from "@/services/supabase";
 import { useAuth } from "@/hooks/useAuth";
+import { getImageUuidsFromCookie } from "@/lib/cookieUtils";
 
 interface MyPicturesProps {
   images?: string[];
@@ -22,11 +23,15 @@ export default function MyPictures({}: MyPicturesProps) {
     async function loadUserImages() {
       try {
         const userId = await getCurrentUserId();
-        if (userId) {
-          const images = await getUserImages(userId);
-          setUserImages(images.slice(0, 3));
-          setImageCount(images.length);
-        }
+        
+        // Get cookie UUIDs for unauthenticated users
+        const cookieUuids = userId ? [] : getImageUuidsFromCookie();
+        
+        // Use unified function that handles both authenticated and unauthenticated users
+        const images = await getImagesForUser(userId, cookieUuids);
+        
+        setUserImages(images.slice(0, 3));
+        setImageCount(images.length);
       } catch (err) {
         console.error("Failed to load user images:", err);
       } finally {

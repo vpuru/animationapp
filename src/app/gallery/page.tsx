@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { getUserImages, getImageUrl } from '@/services/supabase';
+import { getImagesForUser, getImageUrl } from '@/services/supabase';
 import type { ImageState } from '@/services/supabase';
 import { useAuth } from '@/hooks/useAuth';
+import { getImageUuidsFromCookie } from '@/lib/cookieUtils';
 
 export default function GalleryPage() {
   const [images, setImages] = useState<ImageState[]>([]);
@@ -18,12 +19,12 @@ export default function GalleryPage() {
     async function loadUserImages() {
       try {
         const userId = await getCurrentUserId();
-        if (!userId) {
-          router.push('/');
-          return;
-        }
-
-        const userImages = await getUserImages(userId);
+        
+        // Get cookie UUIDs for unauthenticated users
+        const cookieUuids = userId ? [] : getImageUuidsFromCookie();
+        
+        // Use unified function that handles both authenticated and unauthenticated users
+        const userImages = await getImagesForUser(userId, cookieUuids);
         setImages(userImages);
       } catch (err) {
         console.error('Failed to load images:', err);
@@ -63,9 +64,13 @@ export default function GalleryPage() {
           
           <div className="text-center">
             <h1 className="text-3xl font-bold text-gray-800">My Gallery</h1>
-            {isAuthenticated && user && (
+            {isAuthenticated && user ? (
               <p className="text-sm text-gray-600 mt-1">
                 Signed in as {user.email}
+              </p>
+            ) : (
+              <p className="text-sm text-gray-600 mt-1">
+                Your cookie-saved generations
               </p>
             )}
           </div>
@@ -97,7 +102,11 @@ export default function GalleryPage() {
             ))
           ) : images.length === 0 ? (
             <div className="col-span-full text-center text-gray-600 py-16">
-              No animations found. Create your first animation!
+              {isAuthenticated ? (
+                "No animations found. Create your first animation!"
+              ) : (
+                "No saved generations found. Upload an image to get started!"
+              )}
             </div>
           ) : (
             images.map((image) => {
