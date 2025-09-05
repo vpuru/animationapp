@@ -7,6 +7,7 @@ import ProgressBar from "@/components/ProgressBar";
 import CyclingText from "@/components/CyclingText";
 import StarRating from "@/components/StarRating";
 import { getImageState, createImageState } from "@/services/supabase";
+import { useAuth } from "@/hooks/useAuth";
 
 interface LoadingPageProps {
   params: Promise<{
@@ -20,6 +21,7 @@ export default function LoadingPage({ params }: LoadingPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { uuid } = use(params);
+  const { getCurrentUserId } = useAuth();
   const fileExtensionRef = useRef(searchParams.get("ext") || "png");
 
   useEffect(() => {
@@ -34,7 +36,10 @@ export default function LoadingPage({ params }: LoadingPageProps) {
 
         if (!existingState) {
           // No database entry - this is first time, create entry and start processing
-          // Create record without user_id (will be null), user can claim it later via cookies
+          // For authenticated users: create with their user_id immediately
+          // For unauthenticated users: create with null user_id (cookie-based)
+          
+          const userId = await getCurrentUserId(); // null if unauthenticated, user_id if authenticated
 
           // Get file extension from URL params, validate it, and reconstruct filename
           const fileExtension = fileExtensionRef.current;
@@ -45,7 +50,7 @@ export default function LoadingPage({ params }: LoadingPageProps) {
           }
 
           const inputBucketId = `${uuid}.${fileExtension}`;
-          await createImageState(uuid, inputBucketId, null); // No user_id, will be claimed via cookies
+          await createImageState(uuid, inputBucketId, userId); // Conditional: user_id OR null
           // Continue to processImage()
           return false; // Indicates we should proceed with processing
         }
@@ -114,6 +119,9 @@ export default function LoadingPage({ params }: LoadingPageProps) {
     };
 
     handleRequest();
+    // Note: getCurrentUserId is intentionally omitted from dependencies to prevent
+    // race condition when auth state resolves and triggers duplicate processing
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uuid, router]);
 
   if (error) {
