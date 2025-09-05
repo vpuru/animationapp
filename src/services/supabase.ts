@@ -184,7 +184,7 @@ export const getImageStateAdmin = async (uuid: string) => {
     throw new Error(`Failed to get image state: ${error.message}`);
   }
 
-  return data as ImageState;
+  return data as unknown as ImageState;
 };
 
 export const downloadFromInputBucket = async (fileName: string) => {
