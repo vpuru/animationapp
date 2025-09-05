@@ -50,9 +50,15 @@ export default function LoadingPage({ params }: LoadingPageProps) {
           }
 
           const inputBucketId = `${uuid}.${fileExtension}`;
-          await createImageState(uuid, inputBucketId, userId); // Conditional: user_id OR null
-          // Continue to processImage()
-          return false; // Indicates we should proceed with processing
+          
+          try {
+            await createImageState(uuid, inputBucketId, userId); // Conditional: user_id OR null
+            // Continue to processImage()
+            return false; // Indicates we should proceed with processing
+          } catch (createError) {
+            console.error("Failed to create database state:", createError);
+            throw new Error(`Failed to create database entry: ${createError instanceof Error ? createError.message : 'Unknown error'}`);
+          }
         }
 
         if (existingState.output_bucket_id) {

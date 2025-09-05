@@ -18,10 +18,13 @@ export function useConfetti({
 }: UseConfettiOptions) {
   const [showConfetti, setShowConfetti] = useState(false);
   const [confettiSource, setConfettiSource] = useState<ConfettiSource | null>(null);
+  const [hasTriggered, setHasTriggered] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const cleanupTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (trigger && !showConfetti) {
+    if (trigger && !hasTriggered) {
       // Small delay to ensure DOM is updated
       setTimeout(() => {
         // Calculate confetti source from center of the image
@@ -49,14 +52,19 @@ export function useConfetti({
         }
 
         setShowConfetti(true);
+        setIsGenerating(true);
+        setHasTriggered(true);
 
-        // Clear confetti after duration
+        // Stop generating new pieces after duration, but let existing ones fall
         timeoutRef.current = setTimeout(() => {
-          setShowConfetti(false);
+          setIsGenerating(false);
         }, duration);
+
+        // Don't hide the confetti component - let pieces fall naturally off screen
+        // The recycle={false} prop ensures pieces aren't recycled when they fall off
       }, 100); // 100ms delay to ensure image is fully rendered
     }
-  }, [trigger, showConfetti, duration]);
+  }, [trigger, hasTriggered, duration]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -64,11 +72,16 @@ export function useConfetti({
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
+      if (cleanupTimeoutRef.current) {
+        clearTimeout(cleanupTimeoutRef.current);
+      }
     };
   }, []);
 
   return {
     showConfetti,
     confettiSource,
+    isGenerating,
+    numberOfPieces: isGenerating ? 300 : 0, // Generate pieces only when active
   };
 }

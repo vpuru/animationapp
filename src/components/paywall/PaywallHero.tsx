@@ -18,9 +18,9 @@ export default function PaywallHero({
   onImageLoad,
   onImageError,
 }: PaywallHeroProps) {
-  const { showConfetti, confettiSource } = useConfetti({
+  const { showConfetti, confettiSource, numberOfPieces } = useConfetti({
     trigger: imageLoaded,
-    duration: 4000,
+    duration: 2000,
   });
 
   return (
@@ -53,13 +53,15 @@ export default function PaywallHero({
             }`}
             onLoad={onImageLoad}
             onError={onImageError}
-            data-confetti-target
           />
 
           {/* Overlay text - positioned at bottom */}
           {imageLoaded && (
             <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 z-20">
-              <div className="bg-white rounded-lg px-3 py-1.5 shadow-xl border-2 border-gray-800 transform -rotate-1 min-w-max">
+              <div 
+                className="bg-white rounded-lg px-3 py-1.5 shadow-xl border-2 border-gray-800 transform -rotate-1 min-w-max"
+                data-confetti-target
+              >
                 <h2 className="text-lg font-black text-gray-800 text-center leading-tight whitespace-pre-line">
                   {"Unlock Your\nAnimation Now!"}
                 </h2>
@@ -75,10 +77,10 @@ export default function PaywallHero({
           width={typeof window !== 'undefined' ? window.innerWidth : 1200}
           height={typeof window !== 'undefined' ? window.innerHeight : 800}
           confettiSource={confettiSource}
-          numberOfPieces={200}
-          gravity={0.15}
-          initialVelocityX={5}
-          initialVelocityY={15}
+          numberOfPieces={numberOfPieces}
+          gravity={0.2}
+          initialVelocityX={8}
+          initialVelocityY={20}
           colors={[
             '#FFD700', '#FF6B35', '#F7931E', '#FFE66D',
             '#06FFA5', '#4ECDC4', '#45B7D1', '#96CEB4',
@@ -86,9 +88,9 @@ export default function PaywallHero({
             '#BB8FCE', '#85C1E9', '#F8C471', '#EC7063'
           ]}
           recycle={false}
-          run={showConfetti}
-          wind={0}
-          opacity={0.8}
+          run={true}
+          wind={0.02}
+          opacity={0.9}
         />
       )}
     </div>
