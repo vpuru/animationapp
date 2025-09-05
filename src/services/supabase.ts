@@ -171,6 +171,22 @@ export const getImageState = async (uuid: string) => {
   return data as ImageState;
 };
 
+// Server-side version that uses admin privileges (for API routes)
+export const getImageStateAdmin = async (uuid: string) => {
+  const admin = getSupabaseAdmin();
+  
+  const { data, error } = await admin.from("images_state").select("*").eq("uuid", uuid).single();
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      return null; // Not found
+    }
+    throw new Error(`Failed to get image state: ${error.message}`);
+  }
+
+  return data as ImageState;
+};
+
 export const downloadFromInputBucket = async (fileName: string) => {
   const admin = getSupabaseAdmin();
   
@@ -371,7 +387,7 @@ export const verifyPaymentAndUnlock = async (uuid: string, paymentIntentId: stri
   const admin = getSupabaseAdmin();
   
   // First verify the payment intent matches the image
-  const imageState = await getImageState(uuid);
+  const imageState = await getImageStateAdmin(uuid);
   if (!imageState) {
     throw new Error('Image not found');
   }

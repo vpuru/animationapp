@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getImageState } from '@/services/supabase'
+import { getImageStateAdmin } from '@/services/supabase'
 import { getSupabaseClient } from '@/services/supabase'
 
 export async function POST(
@@ -17,7 +17,7 @@ export async function POST(
 
   try {
     // Get the image state from database
-    const imageState = await getImageState(uuid)
+    const imageState = await getImageStateAdmin(uuid)
     
     if (!imageState) {
       return NextResponse.json(

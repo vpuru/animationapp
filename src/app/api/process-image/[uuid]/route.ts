@@ -5,7 +5,7 @@ import {
   downloadFromInputBucket,
   uploadToOutputBucket,
   uploadToPreviewBucket,
-  getImageState,
+  getImageStateAdmin,
 } from "@/services/supabase";
 import { transformImageToGhibli, downloadImageFromUrl, getFileExtension } from "@/services/openai";
 import { addPadlockOverlay, convertImageToPNG } from "@/services/imageProcessing";
@@ -25,7 +25,7 @@ export async function POST(
 
   try {
     // Check if this UUID already exists and handle accordingly
-    const existingState = await getImageState(uuid);
+    const existingState = await getImageStateAdmin(uuid);
     if (!existingState) {
       return NextResponse.json(
         {
