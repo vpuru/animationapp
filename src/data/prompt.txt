@@ -1,0 +1,24 @@
+Task: Stylize the entire source photo into a Studio Ghibli–inspired, hand-drawn animation while PRESERVING the original composition.
+
+Source constraints (highest priority):
+- Keep the original framing, aspect ratio, and camera orientation. Do not recrop or switch to portrait if the source is not portrait.
+- Preserve subject count and relative sizes. Include all visible people from the source; do not remove or invent people.
+- Maintain poses and facing direction. If any subject is back-facing or partially occluded, keep it that way—do NOT rotate to show faces.
+- Keep subject placement and occlusions as in the source (left/right ordering, overlap, distance).
+- If a subject is close to the edge, extend background subtly rather than cropping anyone out.
+
+Style (apply without changing composition):
+- Studio Ghibli–inspired, clean line art and 2–3 tone cel shading; pastel palette, warm ambient light; soft painterly, low-detail background.
+- Outer contour slightly thicker than interior lines; very light blush on cheeks if a face is visible; no photoreal textures.
+
+Identity/face rules (only when a face is actually visible):
+- Preserve identity cues: face shape, eye spacing/gaze, nose/mouth position, hairline/hairstyle.
+- Eyes: almond-shaped, single dark outline; flat-color irises with one highlight; no extra pupils/eyelids.
+- Eyebrows: single clear stroke matching natural thickness.
+- Nose: minimal mark (tiny “L” or dot); no photoreal shading.
+- Mouth: small, tidy anime-style (single clean outline with subtle fill 5–10% darker than skin). If smiling/open: bean shape with one interior shadow; teeth as one white band.
+- Ears align with eye level.
+- Keep shading to 2–3 cel tones; edges crisp, no double lines, smearing, or blur.
+
+Negative instructions:
+- Do NOT reframe to a single-person portrait. Do NOT crop out any person. Do NOT change orientation or zoom. No symmetry forcing that alters likeness.

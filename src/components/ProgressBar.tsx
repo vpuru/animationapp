@@ -4,23 +4,26 @@ import { useEffect, useState } from "react";
 
 export default function ProgressBar() {
   const [progress, setProgress] = useState(0);
-  const totalDuration = 60000; // 60 seconds to match actual processing time
-  const updateInterval = 100; // Update every 100ms for smooth animation
-  const increment = 100 / (totalDuration / updateInterval); // Calculate increment per update
+  const updateInterval = 100; // Update every 100ms
 
   useEffect(() => {
     const interval = setInterval(() => {
       setProgress((prevProgress) => {
-        if (prevProgress >= 100) {
-          clearInterval(interval);
-          return 100;
+        if (prevProgress >= 99) {
+          // Hang at 99%
+          return 99;
+        } else if (prevProgress < 65) {
+          // First 30 seconds: 0% to 65% (65% in 30 seconds = ~0.217% per 100ms)
+          return Math.min(prevProgress + 0.217, 65);
+        } else {
+          // Next 30 seconds: 65% to 99% (34% in 30 seconds = ~0.113% per 100ms)
+          return Math.min(prevProgress + 0.113, 99);
         }
-        return Math.min(prevProgress + increment, 100);
       });
     }, updateInterval);
 
     return () => clearInterval(interval);
-  }, [increment]);
+  }, []);
 
   return (
     <div className="w-full max-w-md mx-auto space-y-3 ">
