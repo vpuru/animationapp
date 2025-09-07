@@ -2,7 +2,6 @@
 
 import InfiniteSlider from "@/components/InfiniteSlider";
 import UploadButton from "@/components/UploadButton";
-import AnimatedWaveText from "@/components/AnimatedWaveText";
 import MyPictures from "@/components/MyPictures";
 import StatsCard from "@/components/StatsCard";
 import TestimonialCard, { TestimonialCardProps } from "@/components/TestimonialCard";
@@ -43,35 +42,39 @@ export default function Home() {
             <StatsCard />
           )}
         </div>
-        <div className="text-center mb-8 mt-10">
-          <h1 className="text-6xl md:text-9xl font-bold mb-2">
-            Your World, <br />
-            <AnimatedWaveText
-              text="Animated"
-              className="bg-gradient-to-r from-blue-400 via-blue-600 to-blue-800 bg-clip-text text-transparent animate-gradient-x"
-            />
-          </h1>
-          {/* <h1 className="text-3xl md:text-5xl font-bold text-black">AI Headshot Generator</h1> */}
-          <p className="text-gray-600 text-lg mt-6 max-w-2xl mx-auto">
-            Professional animation studio powered by AI. Transform your photos into stunning Studio Ghibli-style animations in minutes.
-          </p>
-          <div className="mt-8">
-            <UploadButton />
-            {!loading && !isAuthenticated && (
-              <div className="mt-4">
-                <button
-                  onClick={signInWithGoogle}
-                  className="text-blue-600 hover:text-blue-800 text-sm underline transition-colors"
-                >
-                  click here to login
-                </button>
-              </div>
-            )}
+        <div className="relative mb-8 mt-10">
+          <div className="space-y-20 md:space-y-12">
+            <InfiniteSlider images={mockHeadshots} speed={30} direction="left" />
+            <InfiniteSlider images={mockHeadshots} speed={30} direction="right" />
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div
+              className="w-full px-8 py-4"
+              style={{
+                background:
+                  "radial-gradient(ellipse at center, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 40%, rgba(255, 255, 255, 0.2) 80%, rgba(255, 255, 255, 0) 100%)",
+              }}
+            >
+              <h1 className="text-3xl md:text-5xl font-bold text-gray-900 text-center leading-tight">
+                Turn Your Pictures Into
+                <br />
+                An <span className="text-blue-600">Animation</span>!
+              </h1>
+            </div>
           </div>
         </div>
-        <div className="space-y-4 md:space-y-8">
-          <InfiniteSlider images={mockHeadshots} speed={30} direction="left" />
-          <InfiniteSlider images={mockHeadshots} speed={30} direction="right" />
+        <div className="text-center">
+          <UploadButton />
+          {!loading && !isAuthenticated && (
+            <div className="mt-4">
+              <button
+                onClick={signInWithGoogle}
+                className="text-blue-600 hover:text-blue-800 text-sm underline transition-colors"
+              >
+                click here to login
+              </button>
+            </div>
+          )}
         </div>
         <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           {testimonialsData.map((testimonial: TestimonialCardProps, index: number) => (
