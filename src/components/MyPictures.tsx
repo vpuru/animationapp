@@ -17,12 +17,15 @@ export default function MyPictures({}: MyPicturesProps) {
   const [imageCount, setImageCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const { isAuthenticated, getCurrentUserId } = useAuth();
+  const { isAuthenticated, getCurrentUserId, user, loading: authLoading } = useAuth();
 
   useEffect(() => {
+    // Don't run if auth is still loading
+    if (authLoading) return;
+
     async function loadUserImages() {
       try {
-        const userId = await getCurrentUserId();
+        const userId = user?.id || null;
         
         // Get cookie UUIDs for unauthenticated users
         const cookieUuids = userId ? [] : getImageUuidsFromCookie();
@@ -40,7 +43,7 @@ export default function MyPictures({}: MyPicturesProps) {
     }
 
     loadUserImages();
-  }, [getCurrentUserId]);
+  }, [user, authLoading]);
 
   const handleClick = () => {
     router.push("/gallery");
