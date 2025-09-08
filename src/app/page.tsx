@@ -11,6 +11,7 @@ import testimonialsData from "@/data/testimonials.json";
 import { useAuth } from "@/hooks/useAuth";
 import { getStoredImageCount } from "@/lib/cookieUtils";
 import { useEffect, useState } from "react";
+import tracking from "@/lib/tracking";
 
 export default function Home() {
   const { loading, isAuthenticated, signInWithGoogle } = useAuth();
@@ -20,7 +21,14 @@ export default function Home() {
     // Check if user has any cookie-stored images
     const cookieImageCount = getStoredImageCount();
     setHasCookieImages(cookieImageCount > 0);
-  }, []);
+
+    // Track landing page engagement
+    tracking.trackCustomEvent('landing_page_loaded', {
+      hasAuth: isAuthenticated,
+      hasCookieImages: cookieImageCount > 0,
+      cookieImageCount,
+    });
+  }, [isAuthenticated]);
 
   const topRowImages = [
     "asset_images/gallery-1.png",

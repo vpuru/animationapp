@@ -77,7 +77,7 @@ export default function DownloadPage({ params }: DownloadPageProps) {
     }
 
     loadImage();
-  }, [uuid, router, getCurrentUserId]);
+  }, [uuid, router]);
 
   const handleDownload = () => {
     if (!image) return;

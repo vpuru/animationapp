@@ -3,6 +3,7 @@
 import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import { getImageState, getImageUrl } from "@/services/supabase";
+import tracking from "@/lib/tracking";
 import {
   PaywallHero,
   PaywallFeatures,
@@ -62,6 +63,12 @@ export default function PaywallPage({ params }: PaywallPageProps) {
         }
 
         setPreviewImageUrl(previewUrl);
+
+        // Track paywall page view
+        tracking.trackPaywallView({
+          uuid,
+          hasPreview: true,
+        });
       } catch (err) {
         console.error("Error checking image:", err);
         setError("Failed to load preview image");

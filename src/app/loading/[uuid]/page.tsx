@@ -8,6 +8,8 @@ import CyclingText from "@/components/CyclingText";
 import StarRating from "@/components/StarRating";
 import { getImageState, createImageState } from "@/services/supabase";
 import { useAuth } from "@/hooks/useAuth";
+import tracking from "@/lib/tracking";
+import { trackEvent } from "@/lib/analytics";
 
 interface LoadingPageProps {
   params: Promise<{
@@ -29,6 +31,13 @@ export default function LoadingPage({ params }: LoadingPageProps) {
       setError("Invalid image ID");
       return;
     }
+
+    // Track loading page visit
+    tracking.trackPageView({
+      page: 'Loading Page',
+      path: `/loading/${uuid}`,
+      uuid,
+    });
 
     const checkDatabaseState = async () => {
       try {
@@ -87,6 +96,10 @@ export default function LoadingPage({ params }: LoadingPageProps) {
       try {
         setProcessingStage("Creating your animation...");
 
+        // Track processing start
+        const processingStartTime = performance.now();
+        trackEvent.imageProcessingStarted(uuid);
+
         const response = await fetch(`/api/process-image/${uuid}`, {
           method: "POST",
           headers: {
@@ -102,13 +115,25 @@ export default function LoadingPage({ params }: LoadingPageProps) {
         const result = await response.json();
 
         if (result.success) {
+          // Track processing completion
+          const processingTime = performance.now() - processingStartTime;
+          trackEvent.imageProcessingCompleted({ 
+            uuid, 
+            processingTime: Math.round(processingTime) 
+          });
+          
           router.push(`/paywall/${uuid}`);
         } else {
           throw new Error(result.error || "Processing failed");
         }
       } catch (err) {
         console.error("Processing error:", err);
-        setError(err instanceof Error ? err.message : "An unexpected error occurred");
+        
+        // Track processing error
+        const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred";
+        trackEvent.imageProcessingError(errorMessage, uuid);
+        
+        setError(errorMessage);
 
         setTimeout(() => {
           router.push("/");

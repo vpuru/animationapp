@@ -9,6 +9,7 @@ import {
 } from "@/services/supabase";
 import { transformImageToGhibli, downloadImageFromUrl, getFileExtension } from "@/services/openai";
 import { addPadlockOverlay, convertImageToPNG } from "@/services/imageProcessing";
+import { track } from "@vercel/analytics/server";
 
 export async function POST(
   request: NextRequest,
@@ -48,6 +49,11 @@ export async function POST(
 
     // Entry exists but no output - continue with processing
     console.log(`Processing image for UUID: ${uuid}`);
+    
+    // Track server-side processing start
+    track('Image Processing Started Server', { uuid });
+    const processingStartTime = Date.now();
+    
     await updateImageState(uuid, {
       error_message: null,
     });
@@ -104,6 +110,10 @@ export async function POST(
 
       console.log(`Successfully processed image ${uuid}`);
 
+      // Track server-side processing completion
+      const processingTime = Date.now() - processingStartTime;
+      track('Image Processing Completed Server', { uuid, processingTime });
+
       return NextResponse.json({
         success: true,
         message: "Image processed successfully",
@@ -116,6 +126,9 @@ export async function POST(
       // Update database state to failed (only if we have a database entry)
       const errorMessage =
         processingError instanceof Error ? processingError.message : "Unknown processing error";
+
+      // Track server-side processing error
+      track('Image Processing Error Server', { uuid, error: errorMessage });
 
       try {
         // Try to update error message, but don't fail the whole request if this fails
