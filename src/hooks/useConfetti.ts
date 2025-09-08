@@ -72,8 +72,9 @@ export function useConfetti({
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
-      if (cleanupTimeoutRef.current) {
-        clearTimeout(cleanupTimeoutRef.current);
+      const cleanupTimeout = cleanupTimeoutRef.current;
+      if (cleanupTimeout) {
+        clearTimeout(cleanupTimeout);
       }
     };
   }, []);

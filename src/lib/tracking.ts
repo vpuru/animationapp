@@ -49,13 +49,13 @@ class TrackingManager {
   private currentUser: UserProperties | null = null
 
   // Initialize PostHog
-  initializePostHog(apiKey: string, options?: any) {
+  initializePostHog(apiKey: string, options?: Record<string, unknown>) {
     try {
       if (typeof window !== 'undefined' && !this.isPostHogInitialized) {
         posthog.init(apiKey, {
           api_host: 'https://us.posthog.com',
-          loaded: (posthog) => {
-            console.log('PostHog loaded')
+          loaded: (posthogInstance) => {
+            console.log('PostHog loaded', posthogInstance)
           },
           capture_pageview: false, // We'll handle page views manually
           ...options
@@ -69,7 +69,7 @@ class TrackingManager {
   }
 
   // Initialize Meta Pixel
-  async initializeMetaPixel(pixelId: string, options?: any) {
+  async initializeMetaPixel(pixelId: string, options?: Record<string, unknown>) {
     try {
       if (typeof window !== 'undefined' && !this.isMetaPixelInitialized) {
         const { default: ReactPixel } = await import('react-facebook-pixel')

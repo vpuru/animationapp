@@ -17,7 +17,7 @@ export default function MyPictures({}: MyPicturesProps) {
   const [imageCount, setImageCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const { isAuthenticated, getCurrentUserId, user, loading: authLoading } = useAuth();
+  const { isAuthenticated, user, loading: authLoading } = useAuth();
 
   useEffect(() => {
     // Don't run if auth is still loading
