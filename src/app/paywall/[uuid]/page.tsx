@@ -64,10 +64,12 @@ export default function PaywallPage({ params }: PaywallPageProps) {
 
         setPreviewImageUrl(previewUrl);
 
-        // Track paywall page view
+        // Track paywall page view with enhanced parameters
         tracking.trackPaywallView({
           uuid,
           hasPreview: true,
+          value: 2.99,
+          currency: 'USD'
         });
       } catch (err) {
         console.error("Error checking image:", err);

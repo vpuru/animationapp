@@ -27,6 +27,12 @@ export default function PaymentForm({ uuid, onError }: PaymentFormProps) {
 
     setIsLoading(true);
 
+    // Fire InitiateCheckout on card form submission (first payment action)
+    trackEvent.paymentInitiated({
+      uuid: uuid,
+      paymentMethod: 'card'
+    });
+
     try {
       const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
@@ -43,12 +49,9 @@ export default function PaymentForm({ uuid, onError }: PaymentFormProps) {
       } else if (paymentIntent && paymentIntent.status === "succeeded") {
         // Track payment success
         trackEvent.paymentSuccess({
-          amount: paymentIntent.amount,
+          amount: paymentIntent.amount / 100, // Convert from cents to dollars
           currency: paymentIntent.currency,
-          paymentMethod:
-            typeof paymentIntent.payment_method === "string"
-              ? paymentIntent.payment_method
-              : "unknown",
+          paymentMethod: "card",
           uuid: uuid,
         });
         // Verify payment on server side before redirecting

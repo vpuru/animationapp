@@ -160,14 +160,7 @@ class TrackingManager {
       console.error('PostHog upload button click failed:', error)
     }
 
-    try {
-      if (this.isMetaPixelInitialized && typeof window !== 'undefined') {
-        const { default: ReactPixel } = await import('react-facebook-pixel')
-        ReactPixel.track('InitiateCheckout', props)
-      }
-    } catch (error) {
-      console.error('Meta Pixel upload button click failed:', error)
-    }
+    // REMOVED: InitiateCheckout from upload click (free action)
   }
 
   // Track upload success
@@ -182,14 +175,7 @@ class TrackingManager {
       console.error('PostHog upload success failed:', error)
     }
 
-    try {
-      if (this.isMetaPixelInitialized && typeof window !== 'undefined') {
-        const { default: ReactPixel } = await import('react-facebook-pixel')
-        ReactPixel.track('CompleteRegistration', props)
-      }
-    } catch (error) {
-      console.error('Meta Pixel upload success failed:', error)
-    }
+    // REMOVED: CompleteRegistration from upload success (not a real registration)
   }
 
   // Track processing events
@@ -209,6 +195,8 @@ class TrackingManager {
         // Map processing events to Meta Pixel events
         const { default: ReactPixel } = await import('react-facebook-pixel')
         if (eventName === 'processing_started') {
+          // Fire StartTrial when AI processing starts (free trial value delivery)
+          ReactPixel.track('StartTrial', { content_ids: [props.uuid], source: 'processing_started' })
           ReactPixel.trackCustom('ProcessingStarted', props)
         } else if (eventName === 'processing_completed') {
           ReactPixel.trackCustom('ProcessingCompleted', props)
@@ -220,7 +208,7 @@ class TrackingManager {
   }
 
   // Track paywall views
-  async trackPaywallView(props?: BaseEventProps) {
+  async trackPaywallView(props?: BaseEventProps & { uuid?: string; value?: number; currency?: string }) {
     console.log('Tracking paywall view:', props)
     
     try {
@@ -234,7 +222,13 @@ class TrackingManager {
     try {
       if (this.isMetaPixelInitialized && typeof window !== 'undefined') {
         const { default: ReactPixel } = await import('react-facebook-pixel')
-        ReactPixel.track('ViewContent', props)
+        ReactPixel.track('ViewContent', {
+          content_ids: props?.uuid ? [props.uuid] : undefined,
+          content_type: 'product',
+          value: props?.value,
+          currency: props?.currency || 'USD',
+          ...props
+        })
       }
     } catch (error) {
       console.error('Meta Pixel paywall view failed:', error)
@@ -334,6 +328,72 @@ class TrackingManager {
       }
     } catch (error) {
       console.error('Meta Pixel custom event failed:', error)
+    }
+  }
+
+  // Deduplication for InitiateCheckout - fire only once per uuid
+  private initiateCheckoutFired = new Set<string>()
+
+  async fireInitiateCheckoutOnce(uuid: string, props: PaymentProps & { paymentMethod?: string }) {
+    if (this.initiateCheckoutFired.has(uuid)) {
+      console.log(`InitiateCheckout already fired for uuid: ${uuid}`)
+      return
+    }
+
+    this.initiateCheckoutFired.add(uuid)
+    console.log('Firing InitiateCheckout once for uuid:', uuid, props)
+
+    try {
+      if (this.isPostHogInitialized && typeof window !== 'undefined') {
+        posthog.capture('checkout_initiated', props)
+      }
+    } catch (error) {
+      console.error('PostHog InitiateCheckout failed:', error)
+    }
+
+    try {
+      if (this.isMetaPixelInitialized && typeof window !== 'undefined') {
+        const { default: ReactPixel } = await import('react-facebook-pixel')
+        ReactPixel.track('InitiateCheckout', {
+          value: props.amount,
+          currency: props.currency || 'USD',
+          content_ids: [uuid],
+          content_type: 'product',
+          paymentMethod: props.paymentMethod,
+          ...props
+        })
+      }
+    } catch (error) {
+      console.error('Meta Pixel InitiateCheckout failed:', error)
+    }
+  }
+
+  // Enhanced Purchase tracking with proper parameters
+  async trackPurchaseEnhanced(props: PaymentProps & { paymentMethod?: string }) {
+    console.log('Tracking enhanced purchase:', props)
+    
+    try {
+      if (this.isPostHogInitialized && typeof window !== 'undefined') {
+        posthog.capture('purchase_completed', props)
+      }
+    } catch (error) {
+      console.error('PostHog purchase failed:', error)
+    }
+
+    try {
+      if (this.isMetaPixelInitialized && typeof window !== 'undefined') {
+        const { default: ReactPixel } = await import('react-facebook-pixel')
+        ReactPixel.track('Purchase', {
+          value: props.amount,
+          currency: props.currency || 'USD',
+          content_ids: props.uuid ? [props.uuid] : undefined,
+          content_type: 'product',
+          paymentMethod: props.paymentMethod,
+          ...props
+        })
+      }
+    } catch (error) {
+      console.error('Meta Pixel purchase failed:', error)
     }
   }
 

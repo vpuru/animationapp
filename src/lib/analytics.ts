@@ -40,14 +40,27 @@ export const trackEvent = {
   },
 
   // Payment flow events
-  paymentInitiated: (metadata?: { amount?: number; currency?: string; uuid?: string }) => {
+  paymentInitiated: (metadata?: { amount?: number; currency?: string; uuid?: string; paymentMethod?: string }) => {
     track('Payment Initiated', metadata);
-    tracking.trackCheckoutInitiated(metadata);
+    // Use the new deduplication method for InitiateCheckout
+    if (metadata?.uuid) {
+      tracking.fireInitiateCheckoutOnce(metadata.uuid, {
+        amount: metadata.amount,
+        currency: metadata.currency,
+        paymentMethod: metadata.paymentMethod
+      });
+    }
   },
 
   paymentSuccess: (metadata?: { amount?: number; currency?: string; paymentMethod?: string; uuid?: string }) => {
     track('Payment Success', metadata);
-    tracking.trackPurchase(metadata);
+    // Use enhanced purchase tracking with proper parameters
+    tracking.trackPurchaseEnhanced({
+      amount: metadata?.amount,
+      currency: metadata?.currency,
+      paymentMethod: metadata?.paymentMethod,
+      uuid: metadata?.uuid
+    });
   },
 
   paymentError: (error: string, uuid?: string) => {

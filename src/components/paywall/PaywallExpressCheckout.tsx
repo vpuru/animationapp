@@ -26,19 +26,27 @@ function ExpressCheckoutForm({ uuid }: ExpressCheckoutFormProps) {
   const stripe = useStripe();
   const elements = useElements();
 
-  const handleExpressCheckout = async () => {
+  const handleExpressCheckout = async (event: { expressPaymentType?: string }) => {
     if (!stripe || !elements) return;
 
     setIsProcessing(true);
     setError(null);
 
+    // Determine payment method from the event
+    const paymentMethod = event?.expressPaymentType || 'express_checkout';
+    const normalizedPaymentMethod = paymentMethod === 'applePay' ? 'apple_pay' : 
+                                   paymentMethod === 'googlePay' ? 'google_pay' : 
+                                   'express_checkout';
+
+    // Fire InitiateCheckout on express payment button click (first payment action)
+    trackEvent.paymentInitiated({
+      amount: 2.99, // $2.99 in dollars 
+      currency: 'USD',
+      uuid: uuid,
+      paymentMethod: normalizedPaymentMethod
+    });
+
     try {
-      // Track Express Checkout initiation
-      trackEvent.paymentInitiated({
-        amount: 299, // $2.99 in cents
-        currency: 'USD',
-        uuid: uuid
-      });
 
       // Submit the form data first
       const { error: submitError } = await elements.submit();
@@ -85,9 +93,9 @@ function ExpressCheckoutForm({ uuid }: ExpressCheckoutFormProps) {
 
       // Track successful Express Checkout
       trackEvent.paymentSuccess({
-        amount: 299,
+        amount: 2.99,
         currency: 'USD',
-        paymentMethod: 'express_checkout',
+        paymentMethod: normalizedPaymentMethod,
         uuid: uuid
       });
 
