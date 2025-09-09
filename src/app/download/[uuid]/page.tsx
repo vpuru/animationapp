@@ -77,7 +77,8 @@ export default function DownloadPage({ params }: DownloadPageProps) {
     }
 
     loadImage();
-  }, [uuid, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uuid, router]); // getCurrentUserId intentionally omitted to prevent infinite loops
 
   const handleDownload = () => {
     if (!image) return;

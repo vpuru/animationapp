@@ -23,30 +23,12 @@ export default function Home() {
     setHasCookieImages(cookieImageCount > 0);
 
     // Track landing page engagement
-    tracking.trackCustomEvent('landing_page_loaded', {
+    tracking.trackCustomEvent("landing_page_loaded", {
       hasAuth: isAuthenticated,
       hasCookieImages: cookieImageCount > 0,
       cookieImageCount,
     });
   }, [isAuthenticated]);
-
-  const topRowImages = [
-    "asset_images/gallery-1.png",
-    "asset_images/gallery-2.png",
-    "asset_images/gallery-3.png",
-    "asset_images/gallery-4.png",
-    "asset_images/gallery-5.png",
-    "asset_images/gallery-6.png",
-  ];
-
-  const bottomRowImages = [
-    "asset_images/gallery-7.png",
-    "asset_images/gallery-8.png",
-    "asset_images/gallery-9.png",
-    "asset_images/gallery-10.png",
-    "asset_images/gallery-11.png",
-    "asset_images/gallery-12.png",
-  ];
 
   return (
     <div className="text-gray-900 overflow-x-hidden">
@@ -64,7 +46,7 @@ export default function Home() {
           )}
         </div>
         <div className="relative mb-8 mt-10">
-          <ImageCarousel topRowImages={topRowImages} bottomRowImages={bottomRowImages} />
+          <ImageCarousel />
           <HeroText />
         </div>
         <div className="text-center">
